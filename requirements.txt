@@ -1,0 +1,23 @@
+# ByteLens — strictly pinned dependencies (AGENTS.md §3.4, Design Dungeons
+# research layout). Runtime pins verified against PyPI; dev tooling pinned in
+# requirements-dev.txt. ML libraries are used from P1 onward (training);
+# keeping them pinned now locks the environment before the first baseline run.
+
+# ── Data & PE parsing ───────────────────────────────────────────────────────
+numpy==2.5.3
+scipy==1.18.1
+pandas==2.3.3
+pyarrow==22.0.0
+pefile==2024.8.26
+
+# ── ML: models (P1 baselines: LightGBM, MalConv, baseline CNN, ResNet-50) ──
+lightgbm==4.7.0
+torch==2.14.1
+torchvision==0.29.1
+
+# ── Experiment config & logging ─────────────────────────────────────────────
+PyYAML==6.0.3
+tqdm==4.67.3
+
+# ── Visualization (paper figures, generated from logger/ records) ──────────
+matplotlib==3.10.8

@@ -1,0 +1,8 @@
+# ByteLens — dev tooling (strictly pinned; installed on top of requirements.txt)
+# pip install -r requirements.txt -r requirements-dev.txt
+
+pytest==9.1.1
+ruff==0.16.10
+mypy==1.19.1
+pre-commit==4.5.1
+jupyterlab==4.5.1
