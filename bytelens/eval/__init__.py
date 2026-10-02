@@ -25,7 +25,7 @@ from __future__ import annotations
 __all__ = ["build_splits", "area_under_time", "cluster_bootstrap"]
 
 
-def build_splits(records: "object", protocol: str, seed: int) -> "object":
+def build_splits(records: object, protocol: str, seed: int) -> object:
     """Build random / near-duplicate / time-aware / open-set splits.
 
     Deterministic for a fixed seed. Raises ``NotImplementedError`` until P1.
@@ -33,7 +33,7 @@ def build_splits(records: "object", protocol: str, seed: int) -> "object":
     raise NotImplementedError("build_splits lands with P1 (data + baselines)")
 
 
-def area_under_time(curve: "object") -> float:
+def area_under_time(curve: object) -> float:
     """AUT over a time-ordered performance curve, absent-family aware.
 
     Raises ``NotImplementedError`` until P2.
@@ -41,6 +41,6 @@ def area_under_time(curve: "object") -> float:
     raise NotImplementedError("area_under_time lands with P2 (pilot audits)")
 
 
-def cluster_bootstrap(samples: "object", clusters: "object", n_boot: int, seed: int) -> "object":
+def cluster_bootstrap(samples: object, clusters: object, n_boot: int, seed: int) -> object:
     """Cluster bootstrap for headline CIs (ADR-004). Raises until P2."""
     raise NotImplementedError("cluster_bootstrap lands with P2 (stats protocol)")

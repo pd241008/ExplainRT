@@ -34,12 +34,12 @@ def canonicalize(data: bytes) -> bytes:
     raise NotImplementedError("canonicalize lands with P3 (attacks + defenses)")
 
 
-def adversarial_training(model: "object", config: "object") -> "object":
+def adversarial_training(model: object, config: object) -> object:
     """D2: adversarial training loop (runner-driven). Raises until P3."""
     raise NotImplementedError("adversarial_training lands with P3")
 
 
-def ect_loss(model: "object", batch: "object", beta: float, gamma: float) -> "object":
+def ect_loss(model: object, batch: object, beta: float, gamma: float) -> object:
     """Explanation-consistency loss with beta/gamma from the config only.
 
     beta and gamma must come from a pre-registered ADR/window, never tuned on

@@ -22,7 +22,7 @@ __all__ = ["render_bytes", "resize"]
 ResizeConfig = None  # replaced in P1 by the typed config
 
 
-def render_bytes(data: bytes, config: "ResizeConfig") -> "object":
+def render_bytes(data: bytes, config: ResizeConfig) -> object:
     """Render a raw byte sequence to the model input image.
 
     Args:
@@ -35,7 +35,7 @@ def render_bytes(data: bytes, config: "ResizeConfig") -> "object":
     raise NotImplementedError("render_bytes lands with P1 (data + baselines)")
 
 
-def resize(x: "object", size: tuple[int, int]) -> "object":
+def resize(x: object, size: tuple[int, int]) -> object:
     """The shared differentiable resize op (ADR-002).
 
     Single source of truth for training, inference, and attacks.

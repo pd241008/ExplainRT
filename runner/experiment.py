@@ -21,7 +21,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from logger.run_records import RunRecord, config_hash
 
 REQUIRED_KEYS = ("experiment", "model", "seeds")
@@ -101,9 +100,7 @@ def plan_from_config(cfg: dict[str, Any]) -> list[PlannedRun]:
     ]
 
 
-def resume_filter(
-    planned: list[PlannedRun], done: list[RunRecord]
-) -> list[PlannedRun]:
+def resume_filter(planned: list[PlannedRun], done: list[RunRecord]) -> list[PlannedRun]:
     """Drop planned runs that already have a record with the same identity.
 
     Identity = (experiment, model_name, seed, config hash). Changing anything

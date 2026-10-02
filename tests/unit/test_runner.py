@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import pytest
 import yaml
-
 from logger.run_records import RunRecorder
 from runner import (
     PlannedRun,

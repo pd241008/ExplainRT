@@ -30,7 +30,7 @@ class RegionLabel:
     """
 
 
-def partition_bytes(data: bytes) -> "list[RegionLabel]":
+def partition_bytes(data: bytes) -> list[RegionLabel]:
     """Return exactly one label per input byte.
 
     Raises ``NotImplementedError`` until P1.

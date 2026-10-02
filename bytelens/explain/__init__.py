@@ -20,7 +20,7 @@ from __future__ import annotations
 __all__ = ["grad_cam", "integrated_gradients", "score_cam", "region_masses"]
 
 
-def grad_cam(model: "object", x: "object", target: "int | None" = None) -> "object":
+def grad_cam(model: object, x: object, target: int | None = None) -> object:
     """Class-discriminative Grad-CAM map for the rendered input.
 
     Raises ``NotImplementedError`` until P2.
@@ -28,17 +28,17 @@ def grad_cam(model: "object", x: "object", target: "int | None" = None) -> "obje
     raise NotImplementedError("grad_cam lands with P2 (explanation audits)")
 
 
-def integrated_gradients(model: "object", x: "object", steps: int = 50) -> "object":
+def integrated_gradients(model: object, x: object, steps: int = 50) -> object:
     """Integrated Gradients attribution. Raises ``NotImplementedError`` until P2."""
     raise NotImplementedError("integrated_gradients lands with P2")
 
 
-def score_cam(model: "object", x: "object") -> "object":
+def score_cam(model: object, x: object) -> object:
     """Score-CAM attribution (supplement). Raises ``NotImplementedError`` until P2."""
     raise NotImplementedError("score_cam lands with P2 (supplement)")
 
 
-def region_masses(attribution: "object", regions: "object") -> "object":
+def region_masses(attribution: object, regions: object) -> object:
     """Aggregate a pixel-space attribution into per-region masses summing to 1.
 
     Raises ``NotImplementedError`` until P2.

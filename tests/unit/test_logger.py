@@ -11,7 +11,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from logger import (
     RunRecord,
     RunRecorder,

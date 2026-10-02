@@ -126,7 +126,7 @@ class RunRecord:
         return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"))
 
     @classmethod
-    def from_dict(cls, raw: dict[str, Any]) -> "RunRecord":
+    def from_dict(cls, raw: dict[str, Any]) -> RunRecord:
         missing = [k for k in REQUIRED_FIELDS if k not in raw]
         if missing:
             raise ValueError(f"run record missing required fields: {missing}")
@@ -171,9 +171,7 @@ class RunRecorder:
         return record
 
     @staticmethod
-    def finish(
-        record: RunRecord, metrics: dict[str, float], wall_time_sec: float
-    ) -> RunRecord:
+    def finish(record: RunRecord, metrics: dict[str, float], wall_time_sec: float) -> RunRecord:
         record.metrics = dict(metrics)
         record.wall_time_sec = float(wall_time_sec)
         return record
