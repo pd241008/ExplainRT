@@ -1,0 +1,51 @@
+# ByteLens CI — P0 gate: pytest and lint pass on every push and PR (AGENTS.md §5).
+# Fully offline: tests use no network and no external services (Design
+# Dungeons §10 testing architecture).
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest + ruff (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # Runtime + dev deps in one locked install; no floating versions.
+      - name: Install pinned dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint (ruff check)
+        run: ruff check bytelens runner logger tests
+
+      - name: Lint (ruff format --check)
+        run: ruff format --check bytelens runner logger tests
+
+      - name: Test (pytest)
+        run: pytest -q
+
+      # The repo carries no secrets; gitleaks is cheap insurance for the
+      # malware-safety rule that nothing sensitive is ever committed.
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
