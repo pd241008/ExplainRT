@@ -1,0 +1,26 @@
+# P0 smoke config: validates the scaffold end-to-end (config -> runner plan ->
+# logger record). Uses only the 5 development seeds; no paper numbers come from
+# this experiment. split_version stays null until BODMAS access lands (§9).
+experiment: p0_smoke
+model: baseline_cnn
+seeds: [0, 1, 2, 3, 4]
+
+dataset: bodmas
+split_protocol: random
+split_version: null
+
+attack: null
+attack_budget:
+  q_bytes: null
+  epsilon: null
+defense: null
+defense_params:
+  beta: null
+  gamma: null
+
+render:
+  width_bucket: 224
+  pad_value: 0
+
+runner:
+  resume: true

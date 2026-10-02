@@ -1,0 +1,35 @@
+# ByteLens experiment config — the unit of reproducibility (AGENTS.md §4).
+# Copy this template; one YAML per experiment. Every field consumed by the
+# runner or the library must live here: seeds are fixed in config, never in
+# code, and thresholds/beta/gamma/collapse tolerances are pre-registered in an
+# ADR on an earlier validation window BEFORE the runs that use them (hard rule,
+# AGENTS.md §2).
+
+# ── Identity (required) ─────────────────────────────────────────────────────
+experiment: p0_smoke            # unique per experiment; goes into run records
+model: baseline_cnn             # one of: baseline_cnn | resnet50 | malconv | lightgbm
+seeds: [0, 1, 2, 3, 4]          # 5 for development, 10 for headline claims
+
+# ── Data ────────────────────────────────────────────────────────────────────
+dataset: bodmas                 # primary scope only (ADR-000/§1)
+split_protocol: random          # random | near_duplicate | time_aware | open_set (ADR-003)
+split_version: null             # tracked file in datasets/splits/, set once built
+
+# ── Attack / defense (null = clean run) ─────────────────────────────────────
+attack: null                    # A1 | A3 | A4 | A6 | A8 | null
+attack_budget:                  # Q bytes and epsilon*N fraction (§7)
+  q_bytes: null                 # pre-registered before use
+  epsilon: null
+defense: null                   # canonicalization | adversarial_training | ect | ect_a | null
+defense_params:
+  beta: null                    # pre-registered (ADR-005); never tuned on test
+  gamma: null
+
+# ── Render (ADR-002) ────────────────────────────────────────────────────────
+render:
+  width_bucket: 224
+  pad_value: 0
+
+# ── Runner ──────────────────────────────────────────────────────────────────
+runner:
+  resume: true                  # skip (experiment, model, seed, config_hash) already logged
