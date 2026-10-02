@@ -1,31 +1,96 @@
-# ByteLens 🔬
+<div align="center">
 
-**Explanation-aware robustness of image-based malware classifiers:** PE-valid
-problem-space attacks on predictions *and* Grad-CAM explanations, and an
-Explanation-Consistency Training (ECT) defense.
+# ExplainRT 🔬
 
-Research code for a journal paper (target: IEEE TIFS; backup: Computers &
-Security). The spec is `paper/malware_tifs_paper.tex` — names, goals G1–G3,
-attacks A1–A8, audits S1–S7, metrics. **Agents and contributors: read
-[AGENTS.md](AGENTS.md) before touching code.**
+**PE-valid problem-space attacks that fool both the predictions *and* the
+Grad-CAM explanations of image-based malware classifiers — and an
+Explanation-Consistency Training (ECT) defense with a pre-registered collapse
+guard.**
 
-> **Status: P0 scaffold complete.** Layout, CI, sandbox boundary, ADR-000–007,
-> logger, and runner planning are in place. Next up is P1 (data + baselines),
-> which waits on **BODMAS access** and the paper source — both are
-> stop-and-ask items (AGENTS.md §9). All numbers quoted anywhere must trace to
-> a `logger/` run record; none exist yet, by design.
+[![Python](https://img.shields.io/badge/python-3.11%2B-3670A0?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Status: Research](https://img.shields.io/badge/status-research-purple?style=flat-square)](README.md#-phases)
+[![CI](https://github.com/pd241008/ExplainRT/actions/workflows/ci.yml/badge.svg)](https://github.com/pd241008/ExplainRT/actions/workflows/ci.yml)
 
-## Hard rules (short form — full text in AGENTS.md §2)
+</div>
 
-- **Safety:** samples are executed *only* in `sandbox/` (no network, read-only
-  raw mount). Host interaction with a raw sample = read-only `pefile` parsing.
-  No binaries in git — hashes and split lists only.
-- **Integrity:** no number without a run ID, config, and seed in `logger/`;
-  nothing fabricated or estimated; thresholds pre-registered before use;
-  no robustness claim without the adaptive attack A8; negative results are
-  reported.
+---
 
-## Layout
+## 📖 Abstract
+
+Reported robustness of image-based malware classifiers is inflated by three
+quiet failures: near-duplicate leakage across random splits, shortcut features
+that survive on benchmark data but not in deployment, and explanations that
+look plausible without being faithful. ExplainRT measures all three first —
+random vs near-duplicate vs time-aware vs open-set splits, shortcut audits,
+and Grad-CAM sanity/faithfulness checks. It then attacks **both predictions
+and explanations** with PE-valid, budget-constrained file edits that keep
+samples parseable and executable-code intact (A1–A8, including an adaptive
+attack against every defense), and defends with ECT against input
+canonicalization and adversarial training under an equal tuning budget.
+Every number in the paper traces to a run record — config hash, git SHA,
+seed, split hash — or it does not exist.
+
+> **Status: P0 scaffold complete** — layout, CI, sandbox boundary, ADR-000…007,
+> logger, and runner planning. P1 (data + baselines) waits on BODMAS access
+> and the paper source, both stop-and-ask items. No results exist yet, by
+> design (see [Results](#-results)).
+
+---
+
+## 🧪 Results
+
+> [!IMPORTANT]
+> **Honesty-first policy (AGENTS.md §2):** every cell below is populated only
+> from `logger/` run records (run ID, config, seed) by scripts in `paper/` —
+> never typed by hand, never estimated. The table is the schema; the numbers
+> land with P4 (10 seeds) after the week-6 venue gate.
+
+| Attack / Metric | Baseline | This Work | Notes |
+| --------------- | -------- | --------- | ----- |
+| Random-split accuracy | — | — | bias reference (ADR-003) |
+| Near-duplicate-split accuracy | — | — | RQ1 leakage gap |
+| Time-aware accuracy / AUT | — | — | RQ1 temporal drift |
+| Grad-CAM faithfulness | — | — | RQ3, post-audit S1–S4 |
+| A1 / A3 / A4 / A6 success | — | — | RQ4, budget-limited |
+| A8 (adaptive) vs ECT / D1 / D2 | — | — | no claim without A8 |
+| Clean-accuracy cost of defense | — | — | collapse-guard verdict (ADR-005) |
+
+---
+
+## ⚡ Quickstart
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+
+pytest                     # unit tests — offline, synthetic PEs only
+ruff check .               # lint (CI-pinned version in requirements-dev.txt)
+python3 -m runner.experiment configs/p0_smoke.yaml   # plan runs from a config
+```
+
+A training run is: **one YAML in `configs/` → `runner` expands seeds and
+resume state → `bytelens` executes → one record per run in `logger/`**.
+Seeds live in the config, never in code.
+
+---
+
+## 🗃️ Dataset (exactly how to get it)
+
+Primary scope: **BODMAS** only.
+
+1. Request access from the BODMAS authors
+   (`https://whyisyoung.github.io/BODMAS/`) and note the license terms.
+2. Place the downloaded archive in `datasets/raw/` — **gitignored, immutable,
+   never committed**. Record its SHA-256, download date, and license in
+   `datasets/raw/README.md`.
+3. Parse read-only with `pefile` on the host; anything execution-shaped runs
+   only in `sandbox/` (no network, read-only raw mount — ADR-006).
+4. Timestamps and family labels are required (time-aware and open-set splits,
+   ADR-003). If coverage is unclear, **stop and ask** (AGENTS.md §9).
+
+---
+
+## 🏗️ Repository Layout
 
 ```
 bytelens/    core library: render, regions, models, explain, attacks, defenses, eval
@@ -41,22 +106,17 @@ paper/       LaTeX + figure scripts generated from logger/ records
 notebooks/   numbered EDA/pilots — never the source of paper numbers
 ```
 
-## Quickstart
+## 🚨 Hard rules (short form — full text in AGENTS.md §2)
 
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt -r requirements-dev.txt
+- **Safety:** samples are executed *only* in `sandbox/` (no network, read-only
+  raw mount). Host interaction with a raw sample = read-only `pefile` parsing.
+  No binaries in git — hashes and split lists only.
+- **Integrity:** no number without a run ID, config, and seed in `logger/`;
+  nothing fabricated or estimated; thresholds pre-registered before use;
+  no robustness claim without the adaptive attack A8; negative results are
+  reported.
 
-pytest                     # unit tests (offline, synthetic data only)
-ruff check .               # lint
-python3 -m runner.experiment configs/p0_smoke.yaml   # plan runs from a config
-```
-
-A training run is: **one YAML in `configs/` → `runner` expands seeds and
-resume state → `bytelens` executes → one record per run in `logger/`**.
-Seeds live in the config, never in code.
-
-## Phases
+## 🚦 Phases
 
 | Phase | Scope | Gate |
 |---|---|---|
@@ -67,7 +127,7 @@ Seeds live in the config, never in code.
 | gate | human go/no-go on venue | week 6 — written decision required |
 | P4 | 10 seeds, ablations, figures/tables from logs | every paper number reproducible from a config |
 
-## Documentation
+## 📚 Documentation
 
 - 📚 **ADR catalog:** [`docs/adrs/README.md`](docs/adrs/README.md) — decisions
   ADR-000 … ADR-007 (partition, shared resize, splits, statistics, collapse
@@ -80,10 +140,22 @@ Seeds live in the config, never in code.
   (adoption recorded in [ADR-000](docs/adrs/adr-000-adopt-design-dungeons-conventions.md)).
 - Changes: [CHANGELOG.md](CHANGELOG.md).
 
-## Data
+## 📝 Citation
 
-`datasets/raw/` is empty until BODMAS is obtained from its owners; access,
-licensing, and timestamp coverage are confirmed before any P1 work starts.
-Until then the split protocols, thresholds, and tolerances stay
-`Proposed`/`Draft` in the ADR catalog — nothing is decided against data we
-cannot see.
+Working title — manuscript in preparation (target venue: IEEE TIFS). A
+release-ready BibTeX entry lands with the paper; until then cite as:
+
+```bibtex
+@unpublished{desai2026explainrt,
+  title  = {Explanation-Aware Robustness of Image-Based Malware Classifiers:
+            PE-valid Problem-Space Attacks on Predictions and Grad-CAM
+            Explanations, and an Explanation-Consistency Training (ECT)
+            Defense},
+  author = {Desai, Prathmesh P.},
+  note   = {Manuscript in preparation. Code: github.com/pd241008/ExplainRT}
+}
+```
+
+---
+
+_[pd241008](https://github.com/pd241008) · [ct-os-dev-portfolio.vercel.app](https://ct-os-dev-portfolio.vercel.app)_
