@@ -1,0 +1,4 @@
+# Scratch space inside sandbox sessions. Gitignored: nothing generated here is
+# ever committed (hard rule, AGENTS.md §2). Delete after evaluation.
+*
+!.gitignore
