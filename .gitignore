@@ -1,0 +1,46 @@
+# ByteLens .gitignore
+# Hard rule (AGENTS.md §2): never commit binaries, packed samples, or generated
+# adversarial PEs. Commit hashes and split lists only.
+
+# ── Datasets ────────────────────────────────────────────────────────────────
+# Raw samples are immutable and gitignored; hashes and split lists stay tracked.
+datasets/raw/*
+!datasets/raw/README.md
+# Parsed features and renders are regenerable artifacts
+datasets/processed/*
+!datasets/processed/README.md
+!datasets/processed/adversarial/README.md
+
+# ── Models ──────────────────────────────────────────────────────────────────
+# Serialized weights are gitignored; models/MANIFEST.md is tracked.
+models/*
+!models/MANIFEST.md
+
+# ── Run artifacts ───────────────────────────────────────────────────────────
+logger/runs/
+logger/*.jsonl
+logger/*.parquet
+notebooks/.ipynb_checkpoints/
+
+# ── Environments & secrets (Design Dungeons §06) ───────────────────────────
+.env
+.env.local
+.env.*.local
+.venv/
+venv/
+
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+
+# ── Editors / OS ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
