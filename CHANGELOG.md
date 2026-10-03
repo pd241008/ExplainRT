@@ -25,6 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Postmortem registry with template.
 - CI workflow: pytest + ruff on every push and PR.
 
+### Fixed
+
+- CI: the install step failed on Python 3.11 because `numpy==2.5.3` and
+  `scipy==1.18.1` require Python >= 3.12. Dropped 3.11 from the test matrix
+  (now 3.12 only) and bumped `requires-python`, the ruff target, and the
+  mypy target to 3.12. Runtime pins are unchanged.
+
 ### Decisions
 
 - ADR-000: adopt Design Dungeons conventions; record path corrections.

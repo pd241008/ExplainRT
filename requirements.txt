@@ -2,6 +2,9 @@
 # research layout). Runtime pins verified against PyPI; dev tooling pinned in
 # requirements-dev.txt. ML libraries are used from P1 onward (training);
 # keeping them pinned now locks the environment before the first baseline run.
+#
+# Targets CPython >= 3.12: numpy 2.5.3 and scipy 1.18.1 require it (do not
+# add 3.11 to CI without downgrading these pins).
 
 # ── Data & PE parsing ───────────────────────────────────────────────────────
 numpy==2.5.3
