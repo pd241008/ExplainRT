@@ -19,7 +19,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        # numpy==2.5.3 and scipy==1.18.1 require Python >= 3.12; do not add
+        # 3.11 back without downgrading those pins.
+        python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v4
 

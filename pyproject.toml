@@ -2,13 +2,13 @@
 name = "bytelens"
 version = "0.1.0"
 description = "Explanation-aware robustness of image-based malware classifiers: PE-valid problem-space attacks, Grad-CAM faithfulness, and Explanation-Consistency Training (ECT)."
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 readme = "README.md"
 license = { text = "Proprietary" }
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 src = ["bytelens", "runner", "logger", "tests"]
 
 [tool.ruff.lint]
@@ -37,6 +37,6 @@ filterwarnings = [
 ]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 ignore_missing_imports = true
 check_untyped_defs = true

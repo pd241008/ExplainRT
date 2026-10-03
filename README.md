@@ -7,7 +7,7 @@ Grad-CAM explanations of image-based malware classifiers — and an
 Explanation-Consistency Training (ECT) defense with a pre-registered collapse
 guard.**
 
-[![Python](https://img.shields.io/badge/python-3.11%2B-3670A0?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/python-3.12%2B-3670A0?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![Status: Research](https://img.shields.io/badge/status-research-purple?style=flat-square)](README.md#-phases)
 [![CI](https://github.com/pd241008/ExplainRT/actions/workflows/ci.yml/badge.svg)](https://github.com/pd241008/ExplainRT/actions/workflows/ci.yml)
 
