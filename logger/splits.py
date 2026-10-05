@@ -134,9 +134,9 @@ def write_splits_lock(
     return p
 
 
-def load_splits_lock(splits_dir: str | Path = SPLITS_DIR) -> dict[str, Any]:
+def load_splits_lock(splits_dir: str | Path | None = None) -> dict[str, Any]:
     """Load ``splits.lock.json``; raises :class:`SplitError` when absent/bad."""
-    p = Path(splits_dir) / SPLITS_LOCK_NAME
+    p = Path(SPLITS_DIR if splits_dir is None else splits_dir) / SPLITS_LOCK_NAME
     if not p.is_file():
         raise SplitError(f"splits lock not found: {p}")
     try:
@@ -150,7 +150,7 @@ def load_splits_lock(splits_dir: str | Path = SPLITS_DIR) -> dict[str, Any]:
 
 def verify_split(
     name: str,
-    splits_dir: str | Path = SPLITS_DIR,
+    splits_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """Recompute a named split's side files against its lock entry.
 
@@ -162,8 +162,9 @@ def verify_split(
         raise SplitError(f"split {name!r} not in splits.lock.json")
     entry = lock[name]
     ids_by_side: dict[str, list[str]] = {}
+    base = Path(SPLITS_DIR if splits_dir is None else splits_dir)
     for side in SIDES:
-        side_path = Path(splits_dir) / name / f"{side}.txt"
+        side_path = base / name / f"{side}.txt"
         ids_by_side[side] = read_split_ids(side_path)
         if len(ids_by_side[side]) != entry["counts"][side]:
             raise SplitError(
@@ -179,7 +180,7 @@ def verify_split(
     return entry
 
 
-def verify_all_splits(splits_dir: str | Path = SPLITS_DIR) -> list[str]:
+def verify_all_splits(splits_dir: str | Path | None = None) -> list[str]:
     """Verify every split recorded in the lock; return verified names."""
     lock = load_splits_lock(splits_dir)
     for name in lock:

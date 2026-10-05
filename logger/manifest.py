@@ -40,9 +40,13 @@ class ManifestError(RuntimeError):
     """Raised when the manifest is malformed or verification fails."""
 
 
-def load_manifest(path: str | Path = MANIFEST_PATH) -> dict[str, Any]:
-    """Load and shape-check the manifest; raises :class:`ManifestError`."""
-    p = Path(path)
+def load_manifest(path: str | Path | None = None) -> dict[str, Any]:
+    """Load and shape-check the manifest; raises :class:`ManifestError`.
+
+    ``path`` defaults to the module-level ``MANIFEST_PATH`` resolved at call
+    time (so tests and CLIs can repoint it).
+    """
+    p = Path(path) if path is not None else MANIFEST_PATH
     if not p.is_file():
         raise ManifestError(f"manifest not found: {p} (create it before any run)")
     try:
@@ -74,7 +78,7 @@ def manifest_entries_for(entries: list[dict[str, Any]]) -> str:
 
 
 def dataset_hash(
-    logical_names: list[str] | None = None, manifest_path: str | Path = MANIFEST_PATH
+    logical_names: list[str] | None = None, manifest_path: str | Path | None = None
 ) -> str:
     """``dataset_hash`` over the whole manifest or a subset by logical name.
 
@@ -93,7 +97,7 @@ def dataset_hash(
     return manifest_entries_for(used)
 
 
-def resolve_raw_path(entry: dict[str, Any], raw_dir: str | Path = RAW_DIR) -> Path:
+def resolve_raw_path(entry: dict[str, Any], raw_dir: str | Path | None = None) -> Path:
     """Resolve an entry's tracked relative path inside the raw dir.
 
     Rejects absolute paths and traversal outside ``raw_dir`` — the manifest
@@ -102,14 +106,14 @@ def resolve_raw_path(entry: dict[str, Any], raw_dir: str | Path = RAW_DIR) -> Pa
     rel = Path(entry["path"])
     if rel.is_absolute():
         raise ManifestError(f"entry {entry['logical_name']!r}: absolute paths not allowed")
-    base = Path(raw_dir).resolve()
+    base = Path(RAW_DIR if raw_dir is None else raw_dir).resolve()
     full = (base / rel).resolve()
     if base not in full.parents:
         raise ManifestError(f"entry {entry['logical_name']!r}: path escapes datasets/raw/")
     return full
 
 
-def verify_entry(entry: dict[str, Any], raw_dir: str | Path = RAW_DIR) -> None:
+def verify_entry(entry: dict[str, Any], raw_dir: str | Path | None = None) -> None:
     """Recompute one entry's hash and size; raise :class:`ManifestError` on mismatch.
 
     A modified byte anywhere in the file changes the SHA-256, so any tampering
@@ -138,8 +142,8 @@ def verify_entry(entry: dict[str, Any], raw_dir: str | Path = RAW_DIR) -> None:
 
 def verify_data(
     logical_names: list[str] | None = None,
-    manifest_path: str | Path = MANIFEST_PATH,
-    raw_dir: str | Path = RAW_DIR,
+    manifest_path: str | Path | None = None,
+    raw_dir: str | Path | None = None,
 ) -> list[str]:
     """Verify all (or selected) manifest entries; return verified logical names.
 
@@ -189,7 +193,7 @@ def make_entry(
     source_url: str,
     retrieval_date: str,
     license_note: str,
-    raw_dir: str | Path = RAW_DIR,
+    raw_dir: str | Path | None = None,
     npz_description: bool = False,
 ) -> dict[str, Any]:
     """Build one manifest entry by hashing an existing raw file (read-only).
@@ -199,7 +203,7 @@ def make_entry(
     ``path`` is relative to ``raw_dir`` (absolute inputs are relativized;
     paths outside ``raw_dir`` are rejected).
     """
-    base = Path(raw_dir).resolve()
+    base = Path(RAW_DIR if raw_dir is None else raw_dir).resolve()
     given = Path(path)
     if given.is_absolute():
         try:
