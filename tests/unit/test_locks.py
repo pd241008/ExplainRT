@@ -54,8 +54,8 @@ class TestFreeze:
             freeze(
                 "pilot_v1",
                 config_hash="0" * 64,
-                split_hash=None,
-                dataset_hash=None,
+                split_hash="1" * 64,
+                dataset_hash="2" * 64,
                 git_sha=None,
                 frozen_dir=frozen,
             )

@@ -83,8 +83,8 @@ class TestEligibility:
         lock_path = freeze(
             "pilot",
             config_hash=rec.config_hash,
-            split_hash=None,
-            dataset_hash=None,
+            split_hash="s" * 64,
+            dataset_hash="d" * 64,
             git_sha="abc",
             frozen_dir=frozen,
         )

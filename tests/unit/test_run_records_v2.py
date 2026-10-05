@@ -23,28 +23,23 @@ from logger import (
 )
 
 CFG = {"experiment": "p0_smoke", "model": "malconv", "seed": 42}
-BASE = {
-    "config_hash": "c" * 64,
-    "dataset_hash": "d" * 64,
-    "split_hash": "s" * 64,
-    "git_sha": "abc123def456",
-    "seed": 42,
-}
+_CFG_H, _DATA_H, _SPLIT_H, _GIT, _SEED = "c" * 64, "d" * 64, "s" * 64, "abc123def456", 42
+BASE = (_CFG_H, _DATA_H, _SPLIT_H, _GIT, _SEED)
 
 
 class TestDerivedRunId:
     """Acceptance test 4."""
 
     def test_deterministic_for_identical_inputs(self) -> None:
-        assert derivable_run_id(**BASE) == derivable_run_id(**BASE)
+        assert derivable_run_id(*BASE) == derivable_run_id(*BASE)
 
     def test_differs_when_any_input_changes(self) -> None:
-        base = derivable_run_id(**BASE)
-        assert derivable_run_id(**{**BASE, "config_hash": "c" * 63 + "0"}) != base
-        assert derivable_run_id(**{**BASE, "dataset_hash": "d" * 63 + "0"}) != base
-        assert derivable_run_id(**{**BASE, "split_hash": "s" * 63 + "0"}) != base
-        assert derivable_run_id(**{**BASE, "git_sha": "abc123def457"}) != base
-        assert derivable_run_id(**{**BASE, "seed": 43}) != base
+        base = derivable_run_id(*BASE)
+        assert derivable_run_id("c" * 63 + "0", _DATA_H, _SPLIT_H, _GIT, _SEED) != base
+        assert derivable_run_id(_CFG_H, "d" * 63 + "0", _SPLIT_H, _GIT, _SEED) != base
+        assert derivable_run_id(_CFG_H, _DATA_H, "s" * 63 + "0", _GIT, _SEED) != base
+        assert derivable_run_id(_CFG_H, _DATA_H, _SPLIT_H, "abc123def457", _SEED) != base
+        assert derivable_run_id(_CFG_H, _DATA_H, _SPLIT_H, _GIT, 43) != base
 
     def test_none_inputs_contribute_but_stay_deterministic(self) -> None:
         a = derivable_run_id(None, None, None, None, 0)
@@ -52,7 +47,7 @@ class TestDerivedRunId:
         assert a == b and len(a) == 12
 
     def test_is_12_hex_chars(self) -> None:
-        rid = derivable_run_id(**BASE)
+        rid = derivable_run_id(*BASE)
         assert len(rid) == 12
         int(rid, 16)
 
@@ -150,7 +145,7 @@ class TestProvenanceFields:
 
     def test_v1_records_still_load(self) -> None:
         """ADR-007-era records (timestamp+uuid run_id, no chain) stay readable."""
-        legacy = {
+        legacy: dict[str, object] = {
             "run_id": "20261001-120000-abcd1234",
             "created": "2026-10-01T12:00:00Z",
             "config_hash": "c" * 64,
@@ -173,7 +168,7 @@ class TestProvenanceFields:
     def test_unknown_fields_rejected(self) -> None:
         from logger import RunRecord
 
-        legacy = {
+        legacy: dict[str, object] = {
             "run_id": "x",
             "created": "t",
             "config_hash": "c",
