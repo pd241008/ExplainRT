@@ -17,9 +17,15 @@ models/*
 !models/MANIFEST.md
 
 # ── Run artifacts ───────────────────────────────────────────────────────────
+# Records are the source of paper numbers; the JSONL chain is append-only and
+# hashed. Snapshots are machine-local (hardware/git context differs across
+# machines), so they stay untracked — freeze locks and split locks are the
+# tracked commitments (ADR-009).
 logger/runs/
 logger/*.jsonl
 logger/*.parquet
+paper/artifacts/
+paper/build_manifest.json
 notebooks/.ipynb_checkpoints/
 
 # ── Environments & secrets (Design Dungeons §06) ───────────────────────────

@@ -72,6 +72,26 @@ A training run is: **one YAML in `configs/` → `runner` expands seeds and
 resume state → `bytelens` executes → one record per run in `logger/`**.
 Seeds live in the config, never in code.
 
+### 🔗 Provenance chain (ADR-009)
+
+Every number resolves to exact data, split, config, code, environment, and
+seed — and re-running reproduces it:
+
+```bash
+python -m logger.manifest verify        # data hashes vs. datasets/MANIFEST.json
+python -m logger.verify                 # data + splits + record hash chain
+python -m logger.trace <run_id>         # full chain for one run / table cell
+python -m logger.repro <run_id>         # re-run and compare metrics
+python -m runner.locks freeze <name> --config-hash H --split-hash H --dataset-hash H
+```
+
+Run IDs are **derived** — `sha256(config_hash | dataset_hash | split_hash |
+git_sha | seed)[:12]` — and records are chained (`prev_record_hash` →
+`record_hash`), so editing or deleting a line is detectable. Evaluating a
+locked test window without a matching freeze lock crashes the runner, and
+table generators refuse `smoke`/`pilot-10pct` runs outright. Headline
+(`final`) runs require a clean git tree plus a matching lock.
+
 ---
 
 ## 🗃️ Dataset (exactly how to get it)
@@ -130,8 +150,8 @@ notebooks/   numbered EDA/pilots — never the source of paper numbers
 ## 📚 Documentation
 
 - 📚 **ADR catalog:** [`docs/adrs/README.md`](docs/adrs/README.md) — decisions
-  ADR-000 … ADR-007 (partition, shared resize, splits, statistics, collapse
-  guard, sandbox, run records).
+  ADR-000 … ADR-009 (partition, shared resize, splits, statistics, collapse
+  guard, sandbox, run records, dataset roles, provenance & traceability).
 - 🔥 **Postmortem registry:** [`docs/postmortems/README.md`](docs/postmortems/README.md).
 - 📜 Operating brief for agents: [AGENTS.md](AGENTS.md).
 - 🏰 Conventions source:
