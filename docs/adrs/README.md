@@ -18,5 +18,6 @@ ADR **before** the runs that use them (hard rule, AGENTS.md §2).
 | [ADR-005](adr-005-collapse-guard-and-ect-a.md) | Collapse guard, tolerances, and ECT-A | Draft | 2026-10 |
 | [ADR-006](adr-006-safe-malware-handling-sandbox-boundary.md) | Safe malware handling and the sandbox boundary | Decided | 2026-10 |
 | [ADR-007](adr-007-run-records-and-reproducibility.md) | Run records and reproducibility | Decided | 2026-10 |
+| [ADR-009](adr-009-provenance-hashing-and-result-traceability.md) | Provenance, hashing, and result traceability | Decided | 2026-10-05 |
 
 Postmortems live in the separate registry: [`docs/postmortems/README.md`](../postmortems/README.md).
