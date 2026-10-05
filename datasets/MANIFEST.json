@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "description": "Tracked provenance for gitignored raw data under datasets/raw/ (ADR-009). Metadata and SHA-256 hashes only - never data. Raw files are immutable; verify with: python -m logger.manifest verify",
+  "files": []
+}
