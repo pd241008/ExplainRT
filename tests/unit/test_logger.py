@@ -70,9 +70,12 @@ class TestRunRecord:
             RunRecord.from_dict({"run_id": "x"})
 
     def test_two_starts_get_distinct_run_ids(self) -> None:
+        # ADR-009: the run ID is *derived* from identity inputs, so identical
+        # inputs collide by design (see test_run_records_v2.py). Two starts
+        # with different configs must differ.
         r = RunRecorder(Path("unused"))
         a = r.start(CONFIG_A, 42, "malconv")
-        b = r.start(CONFIG_A, 42, "malconv")
+        b = r.start(CONFIG_B, 43, "malconv")
         assert a.run_id != b.run_id
 
 
@@ -80,8 +83,8 @@ class TestJsonlPersistence:
     def test_append_and_read_round_trip(self, tmp_path: Path) -> None:
         rec = RunRecorder(tmp_path).start(CONFIG_A, 42, "cnn")
         rec = RunRecorder.finish(rec, {"acc": 1.0}, 0.1)
-        path = append_jsonl(rec, tmp_path / "runs.jsonl")
-        assert read_jsonl(path) == [rec]
+        rec = append_jsonl(rec, tmp_path / "runs.jsonl")
+        assert read_jsonl(tmp_path / "runs.jsonl") == [rec]
 
     def test_append_preserves_prior_lines(self, tmp_path: Path) -> None:
         r1 = RunRecorder(tmp_path).start(CONFIG_A, 42, "cnn")
@@ -95,7 +98,17 @@ class TestJsonlPersistence:
 class TestCaptureEnv:
     def test_has_core_fields(self) -> None:
         env = capture_env()
-        assert set(env) == {"python", "platform", "machine", "cpu_count", "gpu"}
+        assert set(env) == {
+            "python",
+            "platform",
+            "machine",
+            "cpu_count",
+            "gpu",
+            "frameworks",
+            "cuda",
+            "requirements_hash",
+            "sandbox_image",
+        }
         assert isinstance(env["python"], str)
 
     def test_gpu_is_none_without_torch_or_list_with(self) -> None:

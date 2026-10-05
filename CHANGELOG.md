@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Provenance & Traceability (ADR-009)
+
+- **ADR-009**: provenance, hashing, and result traceability — custom JSONL
+  hash chain chosen over MLflow/DVC (alternatives recorded in the ADR).
+- `logger/hashing.py`: canonical SHA-256 hashing — `canonical_json` (sorted
+  keys, stable float formatting), `hash_file` (streamed), `hash_array`
+  (dtype+shape bound), `hash_config` (order-insensitive), `hash_split_ids`.
+- `datasets/MANIFEST.json` (tracked, metadata only) + `logger/manifest.py`:
+  per-raw-file entries (source, retrieval date, size, sha256, license note,
+  npz structure), `dataset_hash`, path-safety (no absolute/traversal paths),
+  and the `python -m logger.manifest verify` (verify-data) command that fails
+  loudly on any mismatch. Raw files are only ever read.
+- `logger/splits.py`: sample IDs are sha256s; split side files
+  (`datasets/splits/<name>/<split>.txt`, sorted) plus `splits.lock.json`
+  recording counts, per-side and whole-split hashes, and the split spec
+  (algorithm version, seed, windows, sampling fraction, dataset hash).
+- Run records v2 (schema_version 2): **derived run IDs**
+  (`sha256(config_hash|dataset_hash|split_hash|git_sha|seed)[:12]`), full
+  resolved config, git dirty flag + diff hash, branch, environment (Python,
+  frameworks, CUDA, requirements hash, sandbox image), all seeds +
+  determinism flags, `tags`, `test_touched` + `test_lock_hash`, model
+  artifact sha256, and a **tamper-evident hash chain**
+  (`prev_record_hash`/`record_hash`). ADR-007 (v1) records remain readable.
+- `runner/locks.py`: `freeze` writes `configs/frozen/<name>.lock`
+  (config/split/dataset hashes, git SHA, date); evaluating a locked test
+  window without a matching lock is refused; `final`-tagged runs require a
+  clean git tree and a matching lock.
+- `runner/execution.py`: deterministic seeded reference pipeline so
+  reproducibility is provable ahead of P1 training loops.
+- `paper/tables.py`: table artifacts (`paper/artifacts/<id>.json` +
+  `paper/build_manifest.json`) recording run_ids, all hashes, generator git
+  SHA, and output sha256; generators **refuse** `smoke`/`pilot-10pct` runs
+  and any `test_touched` run without a matching lock.
+- CLIs: `python -m logger.trace <artifact-id | run_id>` (full chain +
+  reproduction command), `python -m logger.verify` (recompute data, split,
+  and record-chain hashes; loud failures), `python -m logger.repro <run_id>`
+  (re-run with recorded config/seed; exact or tolerance-compared metrics,
+  tolerance stated).
+
 ### Added — P0 Scaffold
 
 - Repository layout per AGENTS.md §4: `bytelens/` core library, root-level
@@ -42,3 +81,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ADR-005: collapse guard, tolerances, ECT-A (pre-registered).
 - ADR-006: safe malware handling and sandbox boundary.
 - ADR-007: run records and reproducibility.
+- ADR-009: provenance, hashing, and result traceability (JSONL hash chain,
+  pre-registration locks, paper-side refusal rules).

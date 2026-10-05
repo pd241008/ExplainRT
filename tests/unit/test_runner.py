@@ -101,7 +101,7 @@ class TestPlan:
 
 
 class TestResume:
-    def _record_for(self, planned: PlannedRun, recorder) -> None:
+    def _record_for(self, planned: PlannedRun, recorder):
         rec = recorder.start(
             config=planned.config, seed=planned.seed, model_name=planned.model_name
         )
