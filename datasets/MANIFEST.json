@@ -1,5 +1,52 @@
 {
   "schema_version": 1,
   "description": "Tracked provenance for gitignored raw data under datasets/raw/ (ADR-009). Metadata and SHA-256 hashes only - never data. Raw files are immutable; verify with: python -m logger.manifest verify",
-  "files": []
+  "files": [
+    {
+      "logical_name": "bodmas_features",
+      "path": "bodmas.npz",
+      "source_url": "https://whyisyoung.github.io/BODMAS/",
+      "retrieval_date": "2026-10-07",
+      "size_bytes": 261557445,
+      "sha256": "0a833e46c22c096920c8068d4fb54b868067777c277c0a6eecf527c98d7e5a9e",
+      "license_note": "TODO: license/terms not yet verified (AGENTS.md \u00a79); sample feature release, no binaries",
+      "structure": {
+        "npz_keys": {
+          "X": {
+            "shape": [
+              134435,
+              2381
+            ],
+            "dtype": "<f4",
+            "size_bytes": 1280358940
+          },
+          "y": {
+            "shape": [
+              134435
+            ],
+            "dtype": "<i4",
+            "size_bytes": 537740
+          }
+        }
+      }
+    },
+    {
+      "logical_name": "bodmas_metadata",
+      "path": "bodmas_metadata.csv",
+      "source_url": "https://whyisyoung.github.io/BODMAS/",
+      "retrieval_date": "2026-10-07",
+      "size_bytes": 12705748,
+      "sha256": "5f1dc793cac4a540ef9e0c40fd7897142095621790d3c6f2d6637971806f4c50",
+      "license_note": "TODO: license/terms not yet verified (AGENTS.md \u00a79); sample feature release, no binaries"
+    },
+    {
+      "logical_name": "bodmas_malware_category",
+      "path": "bodmas_malware_category.csv",
+      "source_url": "https://whyisyoung.github.io/BODMAS/",
+      "retrieval_date": "2026-10-07",
+      "size_bytes": 4119807,
+      "sha256": "617fda69347ec907a79f198add431c8bb39102781de41cc03b7cd1718cff2198",
+      "license_note": "TODO: license/terms not yet verified (AGENTS.md \u00a79); sample feature release, no binaries"
+    }
+  ]
 }
