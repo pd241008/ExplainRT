@@ -28,6 +28,9 @@ paper/artifacts/
 paper/build_manifest.json
 notebooks/.ipynb_checkpoints/
 
+# ── Personal working reports (local only, never tracked) ───────────────────
+reports/
+
 # ── Environments & secrets (Design Dungeons §06) ───────────────────────────
 .env
 .env.local
