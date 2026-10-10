@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from logger.run_records import RunRecord, config_hash
 
 REQUIRED_KEYS = ("experiment", "model", "seeds")

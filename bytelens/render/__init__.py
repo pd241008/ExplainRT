@@ -19,7 +19,7 @@ from __future__ import annotations
 
 __all__ = ["render_bytes", "resize"]
 
-ResizeConfig = None  # replaced in P1 by the typed config
+ResizeConfig = object  # placeholder type; replaced in P1 with a dataclass
 
 
 def render_bytes(data: bytes, config: ResizeConfig) -> object:

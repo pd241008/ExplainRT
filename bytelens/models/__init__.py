@@ -3,20 +3,23 @@
 Primary scope (first submission): LightGBM, MalConv, baseline CNN, ResNet-50
 on BODMAS. Anything else is out of scope without an ADR (AGENTS.md section 1).
 
+Implemented: LightGBM feature baseline (ADR-010 §5). Still P1 stubs: the
+render-consuming models (BaselineCNN, ResNet50Classifier, MalConv) — they
+need the ADR-002 render pipeline.
+
 Invariants (tested in P1):
-
 - every model consumes the ADR-002 render/feature path — no bespoke resizing;
-- every training run goes through ``runner/`` and writes a ``logger/`` record;
+- every training run goes through runner/ and writes a logger/ record;
 - seeds come from the config, never from code (hard rule, AGENTS.md section 2);
-- weight files land in ``models/`` under versioned names and are registered in
-  ``models/MANIFEST.md`` with the run ID and hash.
-
-Implemented in P1. Constructors raise ``NotImplementedError`` until then.
+- weight files land in models/ under versioned names and are registered in
+  models/MANIFEST.md with the run ID and hash.
 """
 
 from __future__ import annotations
 
-__all__ = ["BaselineCNN", "MalConv", "ResNet50Classifier", "LightGBMHead"]
+from bytelens.models.lightgbm_baseline import MODEL_NAME, predict, resolve_params, train_lightgbm
+
+__all__ = ["MODEL_NAME", "predict", "resolve_params", "train_lightgbm"]
 
 
 class BaselineCNN:
@@ -29,7 +32,3 @@ class ResNet50Classifier:
 
 class MalConv:
     """Byte-level MalConv (no render; raw bytes + embedding). P1."""
-
-
-class LightGBMHead:
-    """LightGBM over static PE features (``pefile``-derived). P1."""
