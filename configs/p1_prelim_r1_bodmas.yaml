@@ -1,0 +1,38 @@
+# Preliminary run (pre-P1) — R1 single-source regime on BODMAS features only.
+#
+# Scope guard (ADR-008 rev 2, Decision 2): R1 = train and test within *one*
+# dataset. BODMAS npz (EMBER v2, 2381 features) is the only ingested source, so
+# this preliminary run is R1/BODMAS only. R2 (LODO) and R3 (pooled) wait until
+# a second EMBER-v2 source (SOREL/ERMDS/TRITIUM/INFERNO) is ingested; TRITIUM
+# and INFERNO would be test-only by default even then (ADR-008 rev 2, rules).
+#
+# Integrity guards (AGENTS.md section 2, ADR-009):
+# - runs are tagged `smoke` + `prelim` so table generators refuse them;
+# - test windows stay outside this run (test_touched: false);
+# - seeds are fixed in this config (5 dev seeds), never in code.
+
+experiment: p1_prelim_r1_bodmas
+model: baseline_cnn
+seeds: [0, 1, 2, 3, 4]
+
+dataset: bodmas
+regime: R1
+split_protocol: time_aware
+split_version: null
+
+attack: null
+attack_budget:
+  q_bytes: null
+  epsilon: null
+defense: null
+defense_params:
+  beta: null
+  gamma: null
+
+render:
+  width_bucket: 224
+  pad_value: 0
+
+runner:
+  resume: true
+  tags: [smoke, prelim, R1]

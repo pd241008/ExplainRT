@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Track A: BODMAS feature pipeline (ADR-010)
+
+- **ADR-010**: Track A (BODMAS feature pipeline) — interim npz-only mode and
+  full-data mode clearly separated, loader contract, split builders, subset
+  sampling, metric definitions, and the baseline plan fixed **before** any
+  real run.
+- `bytelens/data/bodmas.py`: loader with `allow_pickle=False`, metadata
+  joined by row order (matching the existing raw-file test's layout), family
+  by sha256, shape/finiteness/label-agreement assertions, and
+  `mint_npz_row_id` for interim identities.
+- `bytelens/eval/splits.py`: random (stratified 70/15/15), time-aware (train
+  < val < test by first-seen month), open-set (families held out by
+  first-seen date), and near-duplicate-proxy (seeded cosine-LSH buckets,
+  cluster-disjoint sides) — each returning ID lists plus a
+  `splits.lock.json` entry via `logger.splits`; interim npz-only splits
+  require the `_npzonly` suffix.
+- `bytelens/eval/subsets.py`: 10% pilot subset, stratified by label and
+  feature bucket within month, fixed seed, minimum-stratum guard.
+- `bytelens/eval/metrics.py`: macro-F1, per-family recall, and AUT as
+  pre-registered in ADR-010 (monthly windows; present families only).
+- `bytelens/models/lightgbm_baseline.py`: config-driven LightGBM baseline
+  (seed and hyperparameters come from the YAML, never defaults in code),
+  v2-compatible artifact digest; sanity tests cover shuffled-labels
+  near-chance and random > time-aware on synthetic drift.
+
+### Added — Dataset roles & preliminary run (ADR-008 rev 2)
+
+- **ADR-008 rev 2**: dataset roles, controlled combination, and BODMAS
+  fallback — three named training regimes (R1 single-source, R2
+  leave-one-dataset-out, R3 pooled with per-dataset locked test windows);
+  combination rules (cross-dataset dedup before splitting, v2-feature pooling
+  only, label alias table, class-source confound guard, source share caps,
+  TRITIUM/INFERNO test-only by default, disarm-field normalization), shortcut
+  audit **S8** (source predictable ⇒ cross-source claims invalid), EMBER2024
+  (v3 features) as a separate track, and the image/PE-edit binary fallback
+  (RawMal-TF, MalwareBazaar, MOTIF, month-stratified SOREL subset).
+- `configs/p1_prelim_r1_bodmas.yaml`: preliminary run under regime R1 on the
+  only ingested v2 source (BODMAS features), time-aware split protocol, 5 dev
+  seeds, tagged `smoke`/`prelim`/`R1` so table generators refuse it.
+- `scripts/run_prelim.py`: preliminary-run executor (manifest verification
+  → plan → deterministic pipeline → chained run records with resume).
+- Preliminary-run records appended to `logger/runs.jsonl` (run_ids
+  `95b233a4990e`, `d14b7d502117`, `ee446c3333f5`, `a9e2bb190ad5`,
+  `20eaac7e55ef`; dataset_hash `d2d07b424c66…`); `python -m logger.repro`
+  PASSES with an exact metric match on each seed. Reference-pipeline metrics
+  only — no model-training numbers until P1.
+
 ### Added — Provenance & Traceability (ADR-009)
 
 - **ADR-009**: provenance, hashing, and result traceability — custom JSONL

@@ -1,64 +1,77 @@
-# ADR-008: Dataset roles, combination rules, and BODMAS fallback
+# ADR-008 (rev 2): Dataset roles, controlled combination, and BODMAS fallback
 
-- **Status:** Proposed
-- **Date:** 2026-10-05
+- **Status:** Proposed (revision 2; replaces rev 1 of 2026-10-05)
+- **Date:** 2026-10-09
 - **Supersedes:** scope line in AGENTS.md ("BODMAS only"); amends ADR-003 (split protocol)
 
 ## Context
 
-The primary corpus (BODMAS binaries) depends on an access request that may be denied or delayed. BODMAS also ships feature vectors and metadata separately; those are usable now but support only the non-image path (no byte-images, Grad-CAM, or PE edits). Public alternatives exist, each with different strengths and limits:
+The primary corpus (BODMAS binaries) depends on an access request that may be denied or delayed. Many other public corpora exist, each covering part of what BODMAS provides (raw binaries, first-seen dates, curated families). Items marked **verify** were read from repo/paper summaries only and must be checked against the dataset documentation and licenses before use.
 
-| Dataset | Strengths | Limits |
-|---|---|---|
-| BODMAS features + metadata | 57k malware, 581 families, first-seen timestamps (Aug 2019 – Sep 2020) | Features only; no bytes. Binaries need approval. |
-| BODMAS binaries (pending) | Time-aware family classification with raw PEs | Access not guaranteed; terms restrict sharing |
-| MOTIF | 3,095 disarmed PEs, 454 expert-labeled families, public | Small; many rare families; disarmed (cannot run); dates are report-based |
-| SOREL-20M | ~10M benign + ~10M disarmed malware; time-aware detection and drift at scale | **Verify:** labels are category tags, not families; binaries are very large, so a subset is required |
-| MalwareBazaar | Fresh, timestamped, family signatures | Noisy labels; live malware; account/API key and terms to verify |
-| Benign PEs | Safe to execute; supports execution-verified edits | Not malware; pseudo-families only |
+| Dataset | Binaries | Time information | Labels | Feature format | Notes |
+|---|---|---|---|---|---|
+| BODMAS features + metadata | No | First-seen (Aug 2019 – Sep 2020) | 581 curated families | EMBER v2 (2381) | Public npz via official README (verify link and terms) |
+| BODMAS binaries | Yes | First-seen | 581 families | EMBER v2 | Pending approval |
+| EMBER2024 | No (hashes + VT retrieval code only) | VT first upload (Sep 2023 – Dec 2024) | 6,787 ClarAVy families | **EMBER v3** | Free download; v3 features are not compatible with v2 |
+| SOREL-20M | Yes, disarmed (~8 TB; use a subset) | First/last seen (2017 – Apr 2019) | Tags, not families (verify) | EMBER v2 | Free via S3 under its terms |
+| MOTIF | Yes, disarmed | Report dates (2016 – 2021) | 454 expert families | n/a | Public; small, many rare families |
+| MalwareBazaar | Yes, live | Likely first-seen (verify) | Signatures, noisy | n/a | Free auth key; verify terms |
+| RawMal-TF | Yes, live (~160 GB) | Not found per sample (verify) | 14 types, 17 families | EMBER-compatible | Drive link; manual distribution |
+| ERMDS(-X) | Malware binaries (verify) | 2022 | Labels + families | EMBER v2 | Obfuscation, packing, source-obfuscation variants |
+| TRITIUM | No | ~2022 | Includes a ~14k subset of families unseen in BODMAS | EMBER v2 | MalwareBazaar-derived; features only |
+| INFERNO | No | n/a | ~1.4k red-team / C2 samples | EMBER v2 | Small; evasive-malware test |
+| Benign PEs | Yes | n/a | Pseudo-families (smoke only) | n/a | Execution-based edit verification |
+
+VirusShare (invitation-only, no labels) is not planned.
 
 ## Decision
 
-1. **Each dataset is used for what it is good at and is reported separately.** No pooled training set.
-2. **Roles**
-   - BODMAS binaries (if granted): primary time-aware family classification, region attribution, PE-valid attacks.
-   - BODMAS features/metadata (available now): LightGBM baseline, frozen time-aware and open-set splits (as sha256 lists), AUT and drift curves, category analysis.
-   - MOTIF: clean-label family classification (group-aware, filtered to families with enough samples) and, if BODMAS binaries are granted, a test-only cross-corpus set via an alias map.
-   - SOREL-20M: time-aware detection, drift, and shortcut analysis on a stratified-by-month subset.
-   - MalwareBazaar: optional fresh-sample drift test, only after terms and sandbox rules are confirmed.
-   - Benign PEs: execution-based verification of PE edits; smoke tests (tagged `smoke`, never in paper tables).
-3. **Combination rules**
-   - Deduplicate by SHA-256 across all corpora; remove cross-corpus overlaps from test sets.
-   - Identical preprocessing for all corpora; normalize disarm fields (Subsystem, Machine) so headers cannot reveal the source.
-   - Add shortcut audit **S8**: predict the source dataset from the rendered image; a high score invalidates cross-corpus comparisons.
-   - Splits and time windows are defined per dataset; label spaces are never merged.
-   - Report each dataset separately, plus explicit cross-corpus results.
-4. **Edit validation.** Execution-based verification runs on benign PEs only. Edits on disarmed malware are verified structurally (parse, alignment, loader-field consistency) and reported as structural-only.
-5. **Dataset adapter interface.** All loaders implement one adapter (`iter_samples`, `metadata`, `bytes(sha)`, `splits`) so the pipeline is dataset-agnostic.
+1. **Combining datasets is allowed only as a named experimental condition, never as a silent default.** Every result states its training regime.
+2. **Training regimes (reported separately)**
+   - **R1 single-source:** train and test within one dataset (per-dataset time-aware and near-duplicate-aware splits).
+   - **R2 leave-one-dataset-out (LODO):** train on all other compatible datasets, test on the held-out dataset.
+   - **R3 pooled:** train on the union of the train splits; evaluate on each dataset's own locked test split, per dataset.
+3. **Rules for any combination**
+   - Deduplicate across datasets by SHA-256 (and by near-duplicate hash where bytes exist) *before* splitting.
+   - Define splits per dataset first (frozen hash lists), then union the **train** parts only. Test windows stay per dataset and locked.
+   - **Feature compatibility:** pool only EMBER-v2 (2381-feature) sources (BODMAS, SOREL, ERMDS, TRITIUM, INFERNO). EMBER2024 uses v3 features and stays a separate track unless v2 features can be re-extracted from binaries.
+   - **Labels:** do not merge label spaces silently. Maintain a harmonization/alias table in `datasets/`; pooled *family* experiments use only harmonized families above a minimum count. Otherwise pool for detection only.
+   - **Class-source confound:** every source in a pooled *detection* experiment must contribute both classes. If it cannot (e.g., malware-only sources), run family classification (malware-only) instead. Never pair malware from one source with benign from another as the only contrast.
+   - **Normalization:** normalize disarm fields (Subsystem, Machine) and header time fields in every corpus before rendering or featurizing.
+   - **Source balance:** cap each source's share of training batches with sampling weights so large sets (SOREL) do not drown small ones.
+   - **ERMDS variants:** group all variants of an original sample into the same split.
+   - **TRITIUM and INFERNO are test-only by default** (they were built as drift and unseen-family tests). Using them for training is a separate, labeled R3 variant, and then not as their own test.
+   - **Audit S8:** predict the source dataset from the features and from the rendered image. Report the result; a high score invalidates cross-source claims for that experiment.
+4. **Time handling.** Pooled experiments also report dataset-level temporal order (train on earlier sources, test on later ones, e.g., SOREL and BODMAS then ERMDS and TRITIUM), noting that time is confounded with source. Within-dataset time-aware splits remain the primary temporal evidence.
+5. **Roles**
+   - Feature track: BODMAS npz, SOREL features, ERMDS, TRITIUM, INFERNO (R1/R2/R3); EMBER2024 as its own large-scale time-aware benchmark.
+   - Image/PE-edit track (needs bytes): BODMAS binaries if granted; otherwise RawMal-TF, MalwareBazaar, MOTIF, a month-stratified SOREL subset, ERMDS malware binaries (verify).
+   - Edit verification: execution-based on benign PEs and, where sandbox rules allow, on live malware; structural-only on disarmed corpora (stated in Limitations).
+6. **Dataset adapter interface.** All loaders implement one adapter (`iter_samples`, `metadata`, `bytes(sha)`, `splits`).
+7. **Coverage test (optional).** Check how many EMBER2024 hashes MalwareBazaar can supply as binaries; proceed only if overlap is large enough and terms allow.
 
 ## Scenarios
 
-- **A: BODMAS binaries granted.** BODMAS is primary; MOTIF and SOREL add cross-corpus and drift results. The abstract's time-aware family claim stands.
-- **B: BODMAS binaries not granted.** Primary evidence becomes MOTIF (family, group-aware) + SOREL (time-aware detection/drift) + BODMAS features (time-aware family, feature-based only) + benign PEs (execution checks). Drop time-aware family claims for image models; reword abstract and Table III accordingly. Re-evaluate venue (Computers & Security becomes the more realistic target unless SOREL and the attack results are strong).
-- **Trigger for B:** no reply 14 days after the request is sent (one follow-up at day 7), or an explicit decline.
+- **A: BODMAS binaries granted.** BODMAS is primary for the image track; other sets add R2/R3 and drift results.
+- **B: not granted.** The image track uses the binary sources above; time-aware family claims for image models are dropped or restricted to what the available timestamps support; the abstract and dataset table are reworded. Re-evaluate venue.
+- **Trigger for B:** no reply 14 days after the request, or an explicit decline.
 
-## Alternatives considered
+## Options considered
 
-- Pooling all corpora into one training set: rejected (source leakage via disarmed headers, incompatible time axes and label spaces, cross-corpus duplicates).
-- Waiting for BODMAS before building anything: rejected (blocks the pipeline and the week-6 gate).
-- Using only MOTIF: rejected (too small for time-aware claims).
+- Pooling everything into one default training set: rejected (source leakage, class-source confounds, incompatible feature versions and label spaces, time confounded with source).
+- Single-source only: rejected (wastes available data and the cross-corpus question).
+- Mixing EMBER2024 v3 with v2 features: rejected (incompatible).
 
 ## Consequences
 
-- Paper claims are scoped per dataset; more tables, but each is defensible.
-- Extra work: adapters, alias map for MOTIF families, SOREL subset sampling, audit S8.
-- Edit-validity claims on malware are weaker (structural only) in Scenario B and for MOTIF/SOREL; this must be stated in Limitations.
-- AGENTS.md primary scope must be updated to reference this ADR.
+- More experiments and reporting (three regimes, S8 audit, harmonization table), but each claim is defensible.
+- Related work must position the cross-dataset angle honestly: other studies already evaluate cross-dataset detection; the contribution is the image and explanation-robustness angle.
+- Weaker edit-validity claims on disarmed corpora.
+- AGENTS.md primary scope must reference this ADR.
 
 ## Revisit When
 
 - BODMAS access is granted or denied.
-- SOREL labels or access terms differ from what is assumed here.
-- MalwareBazaar terms prohibit the intended use.
-- The S8 audit shows the source dataset is predictable after normalization.
+- Any "verify" item turns out wrong (labels, access terms, per-sample dates, binaries in ERMDS or RawMal-TF).
+- S8 shows the source is predictable after normalization.
 - The week-6 go/no-go decision is made.

@@ -18,6 +18,8 @@ ADR **before** the runs that use them (hard rule, AGENTS.md §2).
 | [ADR-005](adr-005-collapse-guard-and-ect-a.md) | Collapse guard, tolerances, and ECT-A | Draft | 2026-10 |
 | [ADR-006](adr-006-safe-malware-handling-sandbox-boundary.md) | Safe malware handling and the sandbox boundary | Decided | 2026-10 |
 | [ADR-007](adr-007-run-records-and-reproducibility.md) | Run records and reproducibility | Decided | 2026-10 |
+| [ADR-008](adr-008-dataset-roles-and-fallback.md) | Dataset roles, controlled combination, and BODMAS fallback (rev 2: R1/R2/R3 regimes, S8 audit) | Proposed | 2026-10-09 |
 | [ADR-009](adr-009-provenance-hashing-and-result-traceability.md) | Provenance, hashing, and result traceability | Decided | 2026-10-05 |
+| [ADR-010](adr-010-track-a-bodmas-feature-pipeline.md) | Track A: BODMAS feature pipeline (npz-only interim mode, AUT pre-registration) | Decided | 2026-10-09 |
 
 Postmortems live in the separate registry: [`docs/postmortems/README.md`](../postmortems/README.md).
