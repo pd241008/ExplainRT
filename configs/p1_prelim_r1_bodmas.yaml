@@ -1,24 +1,37 @@
-# Preliminary run (pre-P1) — R1 single-source regime on BODMAS features only.
+# Preliminary pilot run (ADR-010 §5 rev 2) — LightGBM on the 10% subset.
 #
 # Scope guard (ADR-008 rev 2, Decision 2): R1 = train and test within *one*
-# dataset. BODMAS npz (EMBER v2, 2381 features) is the only ingested source, so
-# this preliminary run is R1/BODMAS only. R2 (LODO) and R3 (pooled) wait until
-# a second EMBER-v2 source (SOREL/ERMDS/TRITIUM/INFERNO) is ingested; TRITIUM
-# and INFERNO would be test-only by default even then (ADR-008 rev 2, rules).
+# dataset. BODMAS npz (EMBER v2, 2381 features) is the only ingested source,
+# so this pilot is R1/BODMAS npz-only mode. time_aware/open_set need the
+# metadata CSVs (timestamps + families) and raise until they arrive
+# (ADR-010: never fake months/families).
 #
-# Integrity guards (AGENTS.md section 2, ADR-009):
-# - runs are tagged `smoke` + `prelim` so table generators refuse them;
-# - test windows stay outside this run (test_touched: false);
-# - seeds are fixed in this config (5 dev seeds), never in code.
+# Split protocol: `random` or `near_duplicate_proxy` (npz-only). The proxy is
+# NOT valid for RQ1 (evaluation-bias) claims — ADR-010 rev 2 note.
+#
+# Integrity guards (AGENTS.md §2, ADR-009):
+# - runs are tagged `pilot-10pct` so table generators refuse them;
+# - test_touched: false — evaluation is on the VALIDATION side only;
+#   the test side is untouched until a freeze lock exists;
+# - seeds are fixed here (5 dev seeds), never in code;
+# - AUT: null in npz-only mode (no timestamps/families) — the paper's
+#   trapezoid-over-windows macro-F1 AUT (ADR-010 §4 rev 2) activates when
+#   the CSVs arrive.
 
 experiment: p1_prelim_r1_bodmas
-model: baseline_cnn
+model: lightgbm
 seeds: [0, 1, 2, 3, 4]
 
 dataset: bodmas
 regime: R1
-split_protocol: time_aware
+split_protocol: random
 split_version: null
+
+pilot:
+  fraction: 0.10
+params:
+  num_boost_round: 100
+num_threads: 1
 
 attack: null
 attack_budget:
@@ -29,10 +42,8 @@ defense_params:
   beta: null
   gamma: null
 
-render:
-  width_bucket: 224
-  pad_value: 0
-
 runner:
   resume: true
-  tags: [smoke, prelim, R1]
+  tags: [pilot-10pct, prelim, R1, npzonly]
+  eval_side: val
+  test_touched: false
