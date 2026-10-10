@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed — Track A rev 2: paper-definition AUT, pilot wiring, proxy rename
+
+- **ADR-010 rev 2** (spec before numbers, AGENTS.md §2):
+  - **AUT redefined to the paper's definition**: trapezoidal integration
+    over consecutive windows of per-window **macro-F1**, families eligible
+    only when present in **both train and the window**; headline AUT =
+    unweighted mean over eligible families. Supersedes the interim
+    recall-based definition; drift-guard tests pin the trapezoid formula
+    with hand-computed values (`tests/unit/test_metrics.py::TestTrapezoid`),
+    so any formula regression fails the suite.
+  - **`near-duplicate` split renamed to `near_duplicate_proxy`**
+    everywhere (builders, `logger.splits.KNOWN_ALGORITHMS`, config
+    template, docs) with an explicit **RQ1-invalidity note** in ADR-010:
+    the feature-space LSH proxy does not model PE-hash duplicate structure
+    and may never be quoted as the paper's near-duplicate result.
+- **Pilot wiring (`runner/pilot.py`, `scripts/run_prelim.py`)**: the
+  LightGBM baseline now actually trains — load npz → 10% subset
+  (label-stratified) → split inside the subset → train → evaluate
+  **validation side only** (`test_touched: false`). AUT is recorded as
+  ``null`` in npz-only mode (needs timestamps/families; never invented).
+  Config `p1_prelim_r1_bodmas.yaml`: `model: lightgbm`, seeds 0–4, tags
+  `[pilot-10pct, prelim, R1, npzonly]`, `split_protocol: random`.
+- `tests/unit/test_pilot.py`: val-only evaluation, npz-only protocol guards,
+  deterministic per-seed runs, separable-data learning signal (synthetic d).
+
 ### Added — Track A: BODMAS feature pipeline (ADR-010)
 
 - **ADR-010**: Track A (BODMAS feature pipeline) — interim npz-only mode and

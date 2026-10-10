@@ -119,7 +119,7 @@ class TestNearDuplicateProxy:
         entry = build_near_duplicate_proxy_entry(
             name=name, ids=ids, X=X, seed=0, dataset_hash="d" * 64
         )
-        assert entry["algorithm"] == "random"  # logger.splits canonical name space
+        assert entry["algorithm"] == "near_duplicate_proxy"  # canonical name space
         assert entry["id_basis"] == "row_index"
         assert entry["counts"]["train"] > 0
 

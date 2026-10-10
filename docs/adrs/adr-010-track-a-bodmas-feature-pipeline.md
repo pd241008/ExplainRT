@@ -1,6 +1,9 @@
 # 📜 ADR-010: Track A — BODMAS feature pipeline (loader, splits, metrics, LightGBM)
 
-> **Status:** `Proposed` — becomes `Decided` when the first split is frozen
+> **Status:** `Proposed` (rev 2, 2026-10-10: AUT set to the paper's
+> trapezoid-over-windows macro-F1 definition; `near-duplicate` split renamed
+> to `near_duplicate_proxy` everywhere with an explicit RQ1-validity note) —
+> becomes `Decided` when the first split is frozen
 > (`python -m runner.locks freeze`); blocked decisions are called out below.
 > **Date:** 2026-10-09
 > **Implements:** ADR-003 (split protocol, §"P1" details), ADR-008 rev 2 (R1,
@@ -82,11 +85,22 @@ model only; every other model stays stubbed.
 >   months.
 > - **open-set**: hold out whole families (by first-seen date for family
 >   selection). Requires families — raises in interim mode.
-> - **near-duplicate-proxy**: cluster on the feature matrix (hash-based
->   bucketing of L2-normalized rows; exact-hash buckets first, then
->   cosine-radius clusters), assign each cluster to exactly one side,
->   70/15/15 at cluster level. Available in both modes (needs only X); NOT
->   a substitute for the PE-hash near-duplicate protocol of ADR-003.
+> - **near_duplicate_proxy** (renamed from `near-duplicate`, ADR-010 rev 2):
+>   cluster on the feature matrix (hash-based bucketing of L2-normalized
+>   rows; exact-hash buckets first, then cosine-radius clusters), assign
+>   each cluster to exactly one side, 70/15/15 at cluster level. Available
+>   in both modes (needs only X).
+>   **⚠ RQ1-invalidity note (rev 2):** this split is NOT a valid measurement
+>   instrument for RQ1 (evaluation bias) claims. The near-duplicate buffer
+>   of ADR-003 exists to prevent near-duplicate samples from straddling
+>   train/test and thus overstating scores; this proxy clusters raw EMBER
+>   feature vectors (LSH over normalized rows), not PE content, so it does
+>   not model the same duplicate structure. Comparing `_proxy` scores to
+>   random-split scores therefore characterizes feature-space cluster
+>   leakage only — in pilot/smoke reporting it must be labeled
+>   `near_duplicate_proxy`, never `near-duplicate`, and it must never be
+>   quoted as the paper's near-duplicate result. The RQ1-valid split lands
+>   when PE-file hashes make the exact-hash buffer of ADR-003 possible.
 >
 > Source IDs: final splits use the `sha` column of the metadata CSV; interim
 > splits use minted row IDs (`sha256("npz_row"|i|npz_sha)[:64]`) and record
@@ -104,36 +118,57 @@ model only; every other model stays stubbed.
 
 > [!IMPORTANT]
 > **4. Metrics (`bytelens/eval/metrics.py`).** Macro-F1, per-family recall,
-> and **AUT**, defined as follows (Pendlebury-style, adapted to monthly
-> windows where BODMAS covers Aug 2019 – Sep 2020):
-> - Sort test samples by timestamp into consecutive **windows** = calendar
->   months (a window with zero test samples for a given family = that
->   family is **absent in that window**).
-> - For each window w and family f: recall_f(w) over the samples of f inside
->   w if f is present, else **`None`**.
-> - Window score(w) = macro-average over **present** families only; a
->   window with zero present families yields `None`.
-> - **AUT = mean of the series of per-window scores over the windows where a
->   score exists**, i.e. it never averages `None` as a number and never
->   re-weights a window by its size. Per-family AUT = same reduction reduced
->   over windows for one family (absent months skipped).
-> - Per-family recall that a model never produces for an absent family is
->   defined as **0.0** **only at the closed-set / open-set reporting edge**;
->   AUT itself never substitutes a zero for a missing window.
-> - Interim mode: AUT is **not computed** (no timestamps); interim metrics
->   are macro-F1 and per-side label-based only.
+> and **AUT**. **Rev 2: AUT follows the paper's definition** (supersedes the
+> interim recall-based definition of rev 1, which was fixed in the absence
+> of the paper spec — flagged then in Revisit When): a trapezoidal
+> integration over windows of the **macro-F1** in each window, averaged
+> over **families present in both train and the window**:
+> - Sort windows chronologically by first-seen timestamp (calendar months
+>   for BODMAS Aug 2019 – Sep 2020).
+> - For each family f and window w in f's active window range: a family is
+>   **eligible** for (f, w) iff f has training samples **and** f has ≥1
+>   sample in window w. Absent-in-train families are excluded entirely
+>   (they are the open-set axis, reported separately, never inside AUT).
+> - Window-family score = macro-F1 over the samples of the eligible
+>   families in w (computed with `macro_f1` from §4, not per-family recall).
+> - **AUT = trapezoidal integral of window macro-F1 over t (window index)
+>   normalized by the number of windows−1** — i.e.
+>   `AUT = Σ ½(s_i + s_{i+1})·Δt_i / Σ Δt_i` over consecutive windows with
+>   scores, so linearly-interpolated area equals the mean under uniform
+>   spikes but re-weights genuinely missing/sampled months.
+> - **Family granularity:** AUT is computed per family (one curve each) and
+>   the headline AUT is the unweighted mean over eligible families' AUTs —
+>   the paper's per-family AUT table and the headline number therefore
+>   come from the same series.
+> - Interim npz-only mode: AUT is **not computed** (no timestamps/families);
+>   interim metrics are macro-F1 and per-side label metrics only, and the
+>   record stores `aut: null`.
+> - **Drift guard (rev 2):** `tests/unit/test_metrics.py` pins the formula
+>   with hand-computed trapezoid values on synthetic windows: a test fails
+>   if the formula drifts (e.g. someone reintroduces plain-mean or
+>   recall-based scoring).
 
 > [!IMPORTANT]
-> **5. LightGBM baseline (`bytelens/models/lightgbm_baseline.py`).**
-> Config-driven: all hyperparameters, seeds, and the split name come from
-> the YAML file; seeds never default in code. After training, writes a
-> **schema-version-2 run record** carrying `split_name`, `dataset_hash`
-> (from `logger.manifest.dataset_hash`), `dataset_split_hash` (split hash
-> from `logger.splits`), and `model_artifact_sha256`. The record keeps
-> sequence `test_touched=True` when evaluating a test set only after a
-> matching `configs/frozen/*.lock` exists (`runner.locks.check_lock`).
-> **pilot-10pct runs carry the `pilot-10pct` tag** and are refused by
-> `paper/tables.py` by construction.
+> **5. LightGBM baseline (`bytelens/models/lightgbm_baseline.py`) wired
+> through `runner/pilot.py` (rev 2).** Config-driven: all hyperparameters,
+> seeds, and the split name come from the YAML file; seeds never default in
+> code. After training, writes a **schema-version-2 run record** carrying
+> `split_name`, `dataset_hash` (from `logger.manifest.dataset_hash`),
+> `dataset_split_hash`, and `model_artifact_sha256`. **Pilot execution
+> path (rev 2):** `runner/pilot.py` loads the BODMAS npz, samples the 10%
+> subset (`bytelens.eval.subsets`, label-stratified in npz-only mode; the
+> feature-bucket strata blow up to ≥1-per-bucket and are NOT used for
+> sampling), builds the split **inside the subset** (random or
+> `near_duplicate_proxy`; time-aware/open-set raise in npz-only mode),
+> trains on the train side, and evaluates **on the validation side only**
+> (`test_touched=False`; the test side is never scored before a freeze
+> lock exists). Metrics: `val/macro_f1`, `val/n`, and `val/aut` — which is
+> **null** in npz-only mode (no timestamps/families; ADR-010 §4 rev 2
+> definition activates with the CSVs). Compiler entry:
+> `python -m scripts.run_prelim` (delegates to `runner.pilot.main`),
+> resumable via the (experiment, model, seed, config_hash) identity in
+> `logger/runs.jsonl`. **Pilot runs carry the `pilot-10pct` tag** and are
+> refused by `paper/tables.py` by construction.
 
 > [!IMPORTANT]
 > **6. Sanity tests, run on synthetic data only (AGENTS.md §7).**
@@ -155,8 +190,10 @@ model only; every other model stays stubbed.
 - **Good:** 🟢 Every run record carries dataset hash, split hash, and model
   hash; the LightGBM baseline is byte-traceable without touching
   `paper/tables.py`.
-- **Good:** 🟢 AUT is defined before any AUT number exists, so it cannot be
-  chosen after seeing results.
+- **Good:** 🟢 AUT is defined before any AUT number exists (rev 1 in the
+  absence of the paper; **rev 2 aligns it with the paper's
+  trapezoid-over-windows macro-F1 definition**), so it cannot be chosen
+  after seeing results.
 - **Bad:** 🔴 **Interim results carry no provenance meaning**: real splits
   (time-aware, open-set) are impossible until the CSVs exist; recorded
   interim numbers are blocked at tables and must be labeled `smoke` in
@@ -165,15 +202,17 @@ model only; every other model stays stubbed.
   forms *some* clusters, but a real near-duplicate split needs PE-level
   hashes; the proxy is explicitly NOT the paper's near-duplicate protocol
   and is reported with that caveat, never as its substitute.
-- **Bad:** 🔴 AUT's monthly reduction is a methodological commitment: if the
-  paper later defines AUT differently (e.g., weekly windows or
-  cumulative-training windows), ADR-010 gets a revision and all interim plan
-  code must be re-run — cheaper than silently changing definitions.
+- **Bad:** 🔴 AUT's monthly reduction is a methodological commitment:
+  ADR-010 rev 2 embeds the paper's trapezoid-over-windows macro-F1
+  definition; if the paper's actual `malware_tifs_paper.tex` disagrees with
+  the implementation on any metric, this is the "stop and ask" trigger
+  (runs halt; the metric does not silently get redefined).
 
 ## 🔄 Revisit When
 
 - The CSVs arrive (metadata join, real sha-keyed splits, AUT activation).
 - BODMAS timestamps turn out to require a preprocessing (unit mismatch,
   out-of-range) — loader-side, documented, before the first time-aware split.
-- The paper's AUT definition differs from the one fixed here — ADR-010 rev 2
-  before any AUT enters the write-up (AGENTS.md §9: stop and ask).
+- The paper's `malware_tifs_paper.tex` becomes available and its AUT text
+  (or any metric wording) disagrees with this ADR — code halts, ask a human
+  (AGENTS.md §9), never patch silently.

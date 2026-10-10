@@ -4,7 +4,7 @@ One JSON file per protocol version. Splits are the **only** dataset artifact
 tracked in git (AGENTS.md §4): samples are referenced by SHA-256 hash lists,
 never by file.
 
-Planned protocols (ADR-003): `random`, `near_duplicate`, `time_aware`,
+Planned protocols (ADR-003): `random`, `near_duplicate_proxy`, `time_aware`,
 `open_set`. No split files exist yet — BODMAS access is pending (AGENTS.md §9).
 
 Schema (ADR-009, finalizing the layout sketched in ADR-003):
