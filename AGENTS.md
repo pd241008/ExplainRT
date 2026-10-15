@@ -44,6 +44,14 @@ Source of truth: `github.com/pd241008/Design-Dungeons` (the owner's engineering 
 
 ## 4. Repo layout
 
+Polyglot architecture is decided in [ADR-011](docs/adrs/adr-011-polyglot-architecture.md)
+(rev 4). Raw BODMAS binaries live on an external hard disk and are the immutable
+source: the 67 GB zip is the entry artifact, verified first, then unpacked into
+a controlled RW derived area; the raw/PE-visible side is read-only for any stage
+that sees samples. The host never executes or imports a sample; anything
+execution-shaped stays in `sandbox/` (ADR-006). The C++ gate is the only
+component that opens sample files and serves bytes by SHA-256 ID.
+
 ```
 bytelens/
 ├── notebooks/            # numbered EDA/pilot notebooks only; never the source of paper numbers
@@ -60,6 +68,18 @@ bytelens/
 │   ├── attacks/          # PE editors (append / inject-section / pad-slack), A1-A8
 │   ├── defenses/         # canonicalization, adversarial training, ECT, ECT-A
 │   └── eval/             # splits, AUT, open-set, stats (cluster bootstrap/permutation), audits
+├── ingest/               # Go: zip hash verify, unzip control, per-file SHA-256, manifest, sample table
+├── gate/                 # C++: contract enforcer, sample broker, no-exec preflight, disarm check, audit log
+├── peparse/             # Rust: PE parse, canonical region partition, validity checker (runs under the gate)
+├── decode/              # optional Byteweaver instruction-boundary decoder; gated at G4
+├── contracts/           # mixed proto + JSON + Parquet contracts; shared by all domains
+│   ├── proto/            # protobuf IDL for cross-language control-plane artifacts
+│   ├── schema/           # JSON Schema for JSON artifacts (manifest, run-record refs, locks)
+│   ├── parquet/          # pinned column schemas for bulk tables
+│   ├── producers.json    # fact -> producing stage -> artifact format
+│   ├── rules.json        # runtime gate reject rules (leak-audit)
+│   ├── golden/           # golden fixtures and expected canonical text
+│   └── gen/              # generated protobuf code, committed
 ├── runner/               # config-driven experiment runner: seeds, resume, sandbox harness
 ├── logger/               # structured run records (JSONL/Parquet), env + git capture
 ├── sandbox/              # Dockerfile/VM spec for malware handling; no network
@@ -69,12 +89,21 @@ bytelens/
 │   └── postmortems/      # postmortem registry
 ├── tests/{unit,integration}/
 ├── paper/                # LaTeX source and figures generated from logger/ data
-├── requirements.txt      # strictly pinned
+├── requirements.txt      # strictly pinned (Python side)
 ├── CHANGELOG.md
 └── README.md
 ```
 
-An optional `backend/` inference/triage demo and `frontend/` are out of scope until the paper is submitted. If added later, keep them physically separate at the root.
+Each non-Python domain has its own build tool and pinned toolchain:
+`ingest/` (Go), `gate/` (C++/CMake), `peparse/` (Rust/Cargo),
+`decode/` (optional, gated). `contracts/` is shared by all domains and uses
+protobuf for cross-language control-plane artifacts, JSON Schema for JSON
+artifacts, and Parquet column schemas for bulk tables.
+`bytelens/`, `logger/`, `runner/`, `configs/`, `paper/` remain Python.
+
+An optional `backend/` inference/triage demo and `frontend/` are out of scope
+until the paper is submitted. If added later, keep them physically separate at
+the root.
 
 ## 5. Phases and gates
 

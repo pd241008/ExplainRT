@@ -112,6 +112,9 @@ Primary scope: **BODMAS** only.
 
 ## 🏗️ Repository Layout
 
+Polyglot architecture is decided in [ADR-011](docs/adrs/adr-011-polyglot-architecture.md)
+(rev 4).
+
 ```
 bytelens/    core library: render, regions, models, explain, attacks, defenses, eval
 runner/      config-driven experiment planning (seeds, resume); execution lands in P1
@@ -120,11 +123,23 @@ configs/     one YAML per experiment; the unit of reproducibility
 sandbox/     Dockerfile + protocol: the only place a sample may execute
 datasets/    raw/ (immutable, gitignored) · processed/ (derived) · splits/ (tracked hash lists)
 models/      gitignored weights + tracked MANIFEST.md
+ingest/      Go: zip hash verify, unzip control, per-file SHA-256, manifest, sample table
+gate/        C++: contract enforcer, sample broker, no-exec preflight, disarm check, audit log
+peparse/     Rust: PE parse, canonical region partition, validity checker (runs under the gate)
+decode/      optional Byteweaver instruction-boundary decoder; gated at G4
+contracts/   mixed proto + JSON + Parquet contracts; shared by all domains
 docs/        adrs/ (decision records) · postmortems/ (incident registry)
 tests/       unit/ and integration/ — offline, synthetic PEs only, never real malware
 paper/       LaTeX + figure scripts generated from logger/ records
 notebooks/   numbered EDA/pilots — never the source of paper numbers
 ```
+
+Raw BODMAS binaries live on an external hard disk and are the immutable source:
+the 67 GB zip is the entry artifact, verified first, then unpacked into a
+controlled RW derived area; the raw/PE-visible side is read-only for any stage
+that sees samples. The host never executes or imports a sample; anything
+execution-shaped stays in `sandbox/`. The C++ gate is the only component that
+opens sample files and serves bytes by SHA-256 ID.
 
 ## 🚨 Hard rules (short form — full text in AGENTS.md §2)
 

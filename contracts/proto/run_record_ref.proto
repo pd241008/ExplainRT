@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package explainrt.contracts.v1;
+
+// Run-record reference shape used by the gate and stages.
+// The full run record stays in logger/ (JSONL, Python). This is the
+// control-plane reference that crosses stage boundaries.
+message RunRecordRef {
+  string schema_version = 1;
+  string run_id = 2;
+  string config_hash = 3;
+  string dataset_hash = 4;
+  string split_hash = 5;
+  string git_sha = 6;
+  int64 seed = 7;
+  repeated StageReportRef stage_reports = 8;
+}
+
+message StageReportRef {
+  string producer = 1;
+  string artifact = 2;
+  string artifact_hash = 3;
+  string format = 4;
+}

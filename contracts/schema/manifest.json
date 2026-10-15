@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MANIFEST.json",
+  "description": "Go ingest output: dataset identity, zip sha256, per-file sha256 list with metadata joins. Metadata and hashes only; no data, no raw paths outside configuration. Sample identity is sha256 only.",
+  "type": "object",
+  "required": ["schema_version", "dataset_name", "zip_sha256", "files"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string" },
+    "dataset_name": { "type": "string" },
+    "zip_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "retrieval_date": { "type": "string" },
+    "source_url": { "type": "string" },
+    "license_note": { "type": "string" },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sha256", "size_bytes"],
+        "additionalProperties": false,
+        "properties": {
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "size_bytes": { "type": "integer", "minimum": 0 },
+          "first_seen": { "type": ["string", "null"] },
+          "family": { "type": ["string", "null"] },
+          "label": { "type": ["integer", "null"] }
+        }
+      }
+    }
+  }
+}

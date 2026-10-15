@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "generated_by": "design-time",
+  "note": "Maps each pipeline fact to its single producing stage AND its artifact format (ADR-011 rev 4). The gate rejects outputs from any other stage and any artifact whose format does not match this registry. Edit only via ADR-approved changes.",
+  "facts": {
+    "zip_sha256": {
+      "producer": "ingest",
+      "format": "json",
+      "definition": "schema/manifest.json"
+    },
+    "sample_manifest": {
+      "producer": "ingest",
+      "format": "json",
+      "definition": "schema/manifest.json"
+    },
+    "per_file_sha256": {
+      "producer": "ingest",
+      "format": "parquet+json",
+      "definition": "parquet/sample_table.json + schema/manifest.json"
+    },
+    "sample_table": {
+      "producer": "ingest",
+      "format": "parquet",
+      "definition": "parquet/sample_table.json"
+    },
+    "parse_report": {
+      "producer": "peparse",
+      "format": "protobuf",
+      "definition": "proto/parse_report.proto"
+    },
+    "region_table": {
+      "producer": "peparse",
+      "format": "parquet+protobuf",
+      "definition": "parquet/region_table.json + proto/region_table.proto"
+    },
+    "instruction_boundaries": {
+      "producer": "decode",
+      "format": "parquet",
+      "definition": "parquet/instruction_boundaries.json"
+    },
+    "render": {
+      "producer": "bytelens",
+      "format": "python_artifact",
+      "definition": "bytelens/render (not a cross-language contract artifact)"
+    },
+    "features": {
+      "producer": "bytelens",
+      "format": "python_artifact",
+      "definition": "bytelens/models (not a cross-language contract artifact)"
+    },
+    "model_artifact": {
+      "producer": "bytelens",
+      "format": "python_artifact",
+      "definition": "bytelens/models (not a cross-language contract artifact)"
+    },
+    "run_record": {
+      "producer": "bytelens",
+      "format": "jsonl+protobuf_refs",
+      "definition": "schema/run_record_ref.json + proto/run_record_ref.proto"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "fact": "instruction_boundaries",
+  "producer": "decode",
+  "format": "parquet",
+  "description": "Optional instruction-boundary bulk output (gated at G4). The decoder is optional and not started now; this schema is provisional until G4 opens.",
+  "columns": [
+    { "name": "sha256", "type": "BYTE_ARRAY", "nullable": false, "doc": "Sample identity; hex-encoded SHA-256, 64 chars." },
+    { "name": "offset", "type": "INT64", "nullable": false, "doc": "Instruction start offset." },
+    { "name": "length", "type": "INT32", "nullable": false, "doc": "Instruction length in bytes." }
+  ]
+}
