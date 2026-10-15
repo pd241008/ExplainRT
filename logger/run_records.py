@@ -367,11 +367,11 @@ class RunRecorder:
     @staticmethod
     def finish(
         record: RunRecord,
-        metrics: dict[str, float],
+        metrics: dict[str, float | None],
         wall_time_sec: float,
         model_artifact_sha256: str | None = None,
     ) -> RunRecord:
-        record.metrics = dict(metrics)
+        record.metrics = dict(metrics)  # type: ignore[arg-type,assignment]
         record.wall_time_sec = float(wall_time_sec)
         record.model_artifact_sha256 = model_artifact_sha256
         return record

@@ -29,7 +29,7 @@ NPZONLY_SUFFIX = "_npzonly"
 
 
 def _enforce_npzonly_name(name: str, algorithm: str) -> None:
-    if algorithm in ("time_aware", "open_set", "near_duplicate"):
+    if algorithm in ("time_aware", "open_set"):
         return  # full-data protocols use real sha ids; no suffix needed there
     if not name.endswith(NPZONLY_SUFFIX):
         raise ValueError(
@@ -199,12 +199,12 @@ def build_near_duplicate_proxy_entry(
     id_basis: str = "row_index",
     algorithm_version: str = "1",
 ) -> dict[str, Any]:
-    _enforce_npzonly_name(name, "random")
+    _enforce_npzonly_name(name, "near_duplicate_proxy")
     ids_by_side = near_duplicate_proxy_split(ids=ids, X=X, seed=seed)
     return _ids_by_side_to_entry(
         name=name,
         ids_by_side=ids_by_side,
-        algorithm="random",  # cohort maps to logger.splits canonical names
+        algorithm="near_duplicate_proxy",
         algorithm_version=algorithm_version,
         seed=seed,
         dataset_hash=dataset_hash,

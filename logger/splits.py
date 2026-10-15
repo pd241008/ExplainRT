@@ -28,7 +28,7 @@ from logger.hashing import hash_object, hash_split_ids
 SPLITS_DIR = Path("datasets/splits")
 SPLITS_LOCK_NAME = "splits.lock.json"
 SIDES = ("train", "val", "test")
-KNOWN_ALGORITHMS = ("random", "near_duplicate", "time_aware", "open_set")
+KNOWN_ALGORITHMS = ("random", "near_duplicate_proxy", "time_aware", "open_set")
 
 
 class SplitError(RuntimeError):
