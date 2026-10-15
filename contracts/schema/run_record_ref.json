@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "run_record_ref",
+  "description": "Run-record reference shape used by the gate and stages. The full run record stays in logger/ (JSONL, Python). This is the JSON form of the cross-language run-record reference.",
+  "type": "object",
+  "required": ["schema_version", "run_id", "config_hash", "dataset_hash", "split_hash", "git_sha", "seed", "stage_reports"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string" },
+    "run_id": { "type": "string" },
+    "config_hash": { "type": "string" },
+    "dataset_hash": { "type": "string" },
+    "split_hash": { "type": "string" },
+    "git_sha": { "type": "string" },
+    "seed": { "type": "integer" },
+    "stage_reports": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["producer", "artifact", "artifact_hash", "format"],
+        "additionalProperties": false,
+        "properties": {
+          "producer": { "type": "string", "enum": ["ingest", "peparse", "decode", "bytelens", "gate"] },
+          "artifact": { "type": "string" },
+          "artifact_hash": { "type": "string" },
+          "format": { "type": "string", "enum": ["protobuf", "json", "parquet", "jsonl"] }
+        }
+      }
+    }
+  }
+}

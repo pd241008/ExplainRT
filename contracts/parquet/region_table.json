@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "fact": "region_table",
+  "producer": "peparse",
+  "format": "parquet",
+  "description": "Canonical PE region partition (ADR-001), produced by Rust peparse. Every byte gets exactly one region on valid synthetic fixtures. Sample identity is sha256 only.",
+  "columns": [
+    { "name": "sha256", "type": "BYTE_ARRAY", "nullable": false, "doc": "Sample identity; hex-encoded SHA-256, 64 chars." },
+    { "name": "offset_start", "type": "INT64", "nullable": false, "doc": "Region start offset in the file." },
+    { "name": "offset_end", "type": "INT64", "nullable": false, "doc": "Region end offset in the file (exclusive)." },
+    { "name": "region", "type": "BYTE_ARRAY", "nullable": false, "doc": "Canonical region label (flag-based, not name-based)." },
+    { "name": "flags", "type": "BYTE_ARRAY", "nullable": true, "doc": "Optional flag set for the region." }
+  ]
+}

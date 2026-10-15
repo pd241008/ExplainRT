@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package explainrt.contracts.v1;
+
+// Sample manifest control-plane message (Go ingest output).
+// Metadata and hashes only: no data, no raw paths outside configuration.
+// Sample identity is sha256 only.
+message Manifest {
+  string schema_version = 1;
+  string dataset_name = 2;
+  string zip_sha256 = 3;
+  string retrieval_date = 4;
+  string source_url = 5;
+  string license_note = 6;
+
+  repeated FileEntry files = 7;
+}
+
+message FileEntry {
+  string sha256 = 1;
+  uint64 size_bytes = 2;
+  optional string first_seen = 3;
+  optional string family = 4;
+  optional int32 label = 5;
+}

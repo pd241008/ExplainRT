@@ -1,0 +1,39 @@
+{
+  "schema_version": "1",
+  "generated_by": "design-time",
+  "note": "Runtime gate reject rules for the leak-audit layer (ADR-011 rev 4, 8.4). CI lint on the IDL and JSON/Parquet schemas is the other half. Edit only via ADR-approved changes.",
+  "sha256_pattern": "^[0-9a-f]{64}$",
+  "string_cap_bytes": 4096,
+  "path_separators": {
+    "forbidden_in_strings": true,
+    "allowed_if_field_tagged_as": "url"
+  },
+  "forbidden_field_substrings": ["path", "file", "content", "bytes", "data"],
+  "sample_identity_field": "sha256",
+  "unknown_fields_rejected": true,
+  "artifact_rules": {
+    "Manifest": {
+      "required": ["schema_version", "dataset_name", "zip_sha256", "files"],
+      "zip_sha256": { "type": "sha256" },
+      "files.sha256": { "type": "sha256" },
+      "files": { "max_count_bytes_estimate": 1048576 }
+    },
+    "ParseReport": {
+      "required": ["schema_version", "producer", "git_sha", "tool_version", "input_hashes", "output_hash", "samples"],
+      "producer": { "enum": ["peparse"] },
+      "samples.sha256": { "type": "sha256" },
+      "samples": { "max_count_bytes_estimate": 1048576 },
+      "output_hash": { "type": "sha256" }
+    },
+    "RegionTable": {
+      "required": ["schema_version", "producer", "git_sha", "tool_version", "input_hashes", "output_hash", "row_count"],
+      "producer": { "enum": ["peparse"] },
+      "output_hash": { "type": "sha256" }
+    },
+    "RunRecordRef": {
+      "required": ["schema_version", "run_id", "config_hash", "dataset_hash", "split_hash", "git_sha", "seed", "stage_reports"],
+      "stage_reports.producer": { "enum": ["ingest", "peparse", "decode", "bytelens", "gate"] },
+      "stage_reports": { "max_count_bytes_estimate": 65536 }
+    }
+  }
+}

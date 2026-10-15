@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "fact": "sample_table",
+  "producer": "ingest",
+  "format": "parquet",
+  "description": "Per-sample bulk table produced by Go ingest. Columns are provisional until the BODMAS metadata is confirmed present on the working machine (ADR-011 rev 4, risks 2). Sample identity is sha256 only.",
+  "columns": [
+    { "name": "sha256", "type": "BYTE_ARRAY", "nullable": false, "doc": "Sample identity; hex-encoded SHA-256, 64 chars." },
+    { "name": "size_bytes", "type": "INT64", "nullable": false, "doc": "File size in bytes." },
+    { "name": "first_seen", "type": "BYTE_ARRAY", "nullable": true, "doc": "Optional dataset timestamp; exact semantics are dataset-specific and provisional." },
+    { "name": "family", "type": "BYTE_ARRAY", "nullable": true, "doc": "Optional family label; exact taxonomy is dataset-specific and provisional." },
+    { "name": "label", "type": "INT32", "nullable": true, "doc": "Optional numeric label; exact meaning is dataset-specific and provisional." }
+  ]
+}

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package explainrt.contracts.v1;
+
+// PE parse report (Rust peparse output).
+// Deterministic, sorted, hash-chained. No file paths, no raw bytes, no bytes fields.
+message ParseReport {
+  string schema_version = 1;
+  string producer = 2;
+  string git_sha = 3;
+  string tool_version = 4;
+  InputHashes input_hashes = 5;
+  string output_hash = 6;
+  repeated SampleParse samples = 7;
+}
+
+message InputHashes {
+  string manifest = 1;
+}
+
+message SampleParse {
+  string sha256 = 1;
+  bool parse_ok = 2;
+  optional string dos_magic = 3;
+  optional string machine = 4;
+  optional string subsystem = 5;
+  string region_table_hash = 6;
+  optional string error = 7;
+}

@@ -1,0 +1,9 @@
+[package]
+name = "peparse"
+version = "0.1.0"
+edition = "2021"
+
+# Scaffold placeholder for the Rust PE parse stage.
+# Real dependencies are pinned when G2 starts, not here.
+
+[dependencies]
