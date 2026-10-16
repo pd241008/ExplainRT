@@ -40,3 +40,4 @@ Thanks for keeping the repo auditable. For a compliance or fix-it PR, please kee
 ### After the PR
 - Update `CHANGELOG.md` if the change is user- or researcher-facing.
 - If the change opens or closes a gate condition, note it in the PR body.
+
