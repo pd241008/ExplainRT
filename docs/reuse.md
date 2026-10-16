@@ -13,3 +13,12 @@ and date, and must pass this repo's golden tests first (ADR-011 9).
 None yet. The Helios ingestion workflow and the Byteweaver decoder are intended
 reuse targets, but no code from them has been integrated into this repo yet.
 When code is imported, add an entry here before it is used by any stage.
+
+This file is the reuse registry. It is not the contract layer and not the gate
+configuration; for runtime authority see `contracts/rules/rules.json` and
+`contracts/producers.json`.
+
+At present this registry is empty because the pipeline is being stood up to
+receive real BODMAS archives from the attached disk. Ingestion begins only
+after the disk is loaded into `datasets/raw/` and `datasets/raw/BODMAS-INGEST.json`
+is written, per `datasets/raw/README.md` § Ingest SOP.

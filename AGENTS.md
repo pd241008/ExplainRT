@@ -2,6 +2,8 @@
 
 Operating brief for any coding agent working in this repo. Read it fully before touching code. If a human instruction conflicts with the **Hard rules**, stop and ask.
 
+Note: docs/adrs/adr-011-polyglot-architecture.md, contracts/README.md, docs/reuse.md, and datasets/raw/README.md were updated this session to make the incoming BODMAS disk ingest a first-class module. The raw-store SOP, provenance record, and readiness checks are now explicit there.
+
 ## 1. Mission
 
 ByteLens is the code behind a journal paper (target: IEEE TIFS; backup: Computers & Security):

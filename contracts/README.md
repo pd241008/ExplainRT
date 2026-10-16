@@ -6,6 +6,10 @@ This directory is the shared contract layer for the polyglot pipeline defined in
 ## What lives here
 
 - `proto/` — protobuf IDL for cross-language control-plane artifacts
+
+(contracts/README.md is the human-facing summary of the contract layer; the
+runtime authority is `rules.json` and the fact register is `producers.json`.
+Do not read this README as the source of truth for gate behavior.)
   (package `explainrt.contracts.v1`): stage report, parse report, gate decision
   record, sample reference, run-record reference. No bulk tables.
 - `schema/` — JSON Schema for JSON artifacts: `MANIFEST.json`, split lock files,
