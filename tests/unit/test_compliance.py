@@ -3,11 +3,10 @@
 These tests exist so the template does not drift out of sync with the repo's
 current governance files and the no-co-author rule.
 """
+
 from __future__ import annotations
 
-import os
 import subprocess
-import textwrap
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
